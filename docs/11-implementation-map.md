@@ -256,3 +256,35 @@ Tests intentionally avoid real external services.
 - `src/samples/demo.ts` may depend on samples and runtime because it is the CLI boundary.
 - `src/tests` may depend on all layers.
 - PlaceOrder has no runtime until explicitly implemented.
+
+## Future Extension Points
+
+`PlaceOrderJunction` currently has a static model/report sample. Its runtime should not be implemented until scenario states are explicit.
+
+A future PlaceOrder runtime will likely need:
+
+- external reference store
+- compensation handler
+- reconciliation job
+- explicit partial-success states
+- provider-specific policy seams
+
+```mermaid
+flowchart TB
+  Core[src/core] --> StaticSamples[static samples]
+  StaticSamples --> RegisterRuntime[RegisterUser mock runtime]
+  StaticSamples --> FuturePlaceOrder[future PlaceOrder runtime]
+
+  FuturePlaceOrder --> ExternalRef[external reference store]
+  FuturePlaceOrder --> Compensation[compensation handler]
+  FuturePlaceOrder --> Reconciliation[reconciliation job]
+  FuturePlaceOrder --> ProviderPolicies[provider-specific policies]
+
+  ProviderPolicies -. must not enter .-> Core
+```
+
+Provider-specific behavior should stay outside `src/core`. Core should continue to model attributes, effects, prescriptions, junctions, and reports.
+
+Runtime samples should remain small and educational unless the repository intentionally changes direction. Any future provider-specific implementation should live in adapters, policies, or sample runtime layers, not in core.
+
+Effect-TS or another effect system should not be introduced unless there is an explicit design reason.
