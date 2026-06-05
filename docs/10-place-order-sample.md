@@ -12,7 +12,7 @@ It demonstrates effect attributes that RegisterUser does not cover deeply:
 - partial success
 - compensation
 
-This is a documentation-first design. A static TypeScript model/report sample exists, but the PlaceOrder runtime is not implemented yet.
+This is a documentation-first design. A static TypeScript model/report sample and an educational deterministic mock runtime now exist for the planned PlaceOrder scenarios.
 
 ## Bad Example
 
