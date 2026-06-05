@@ -99,6 +99,12 @@ stateDiagram-v2
 | `shipment-job-fails` | Order remains placed or pending shipment depending on sample policy, shipment outbox item remains failed or pending, and retry requires keyed idempotency. | `placed` or shipment-pending |
 | `analytics-fails` | Order remains placed, warning is recorded, and best-effort failure does not affect order success. | `placed` |
 
+TypeScript state model note:
+
+- `payment-authorization-fails` currently fixes `finalOrderState` as `payment_failed`.
+- `shipment-job-fails` currently fixes `finalOrderState` as `placed`.
+- These can be revised before runtime implementation if the sample policy changes.
+
 ## Compensation And Reconciliation Flow
 
 ```mermaid
