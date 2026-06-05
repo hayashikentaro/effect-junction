@@ -90,6 +90,8 @@ npm run demo -- --scenario analytics-fails
 npm run demo -- --scenario duplicate-dispatch
 npm run demo -- --scenario chaos --seed 42
 npm run demo -- --junction place-order
+npm run demo -- --junction place-order --scenario happy-path
+npm run demo -- --junction place-order --scenario payment-succeeds-reference-store-fails
 ```
 
 ## Documentation

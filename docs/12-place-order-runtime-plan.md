@@ -154,6 +154,14 @@ Reconciliation may need:
 
 These are documentation examples only. Do not implement them until the scenario-state plan is stable.
 
+The demo CLI can display static scenario expectations:
+
+```sh
+npm run demo -- --junction place-order --scenario payment-succeeds-reference-store-fails
+```
+
+This still does not execute a PlaceOrder runtime.
+
 ```ts
 type PlaceOrderScenario =
   | "happy-path"

@@ -1,5 +1,10 @@
 import { runRegisterUserScenario } from "../runtime/register-user-runtime.js";
 import { parseScenarioName } from "../runtime/scenarios.js";
+import {
+  categorizePlaceOrderState,
+  parsePlaceOrderScenarioName,
+  placeOrderScenarioExpectations,
+} from "../runtime/place-order-states.js";
 import { PlaceOrderJunction } from "./place-order.js";
 
 function readArg(name: string): string | undefined {
@@ -11,13 +16,33 @@ function readArg(name: string): string | undefined {
   return process.argv[index + 1];
 }
 
-const scenarioName = parseScenarioName(readArg("--scenario"));
 const junctionName = readArg("--junction") ?? "register-user";
+const scenarioArg = readArg("--scenario");
 const seedArg = readArg("--seed");
 const seed = seedArg === undefined ? undefined : Number(seedArg);
 
 if (junctionName === "place-order") {
+  const scenarioName = parsePlaceOrderScenarioName(scenarioArg);
+  const expectation = placeOrderScenarioExpectations[scenarioName];
+
   console.log(PlaceOrderJunction.report());
+  console.log("");
+  console.log("Scenario expectation:");
+  console.log(`  scenario: ${expectation.scenario}`);
+  console.log(`  finalOrderState: ${expectation.finalOrderState}`);
+  console.log(
+    `  category: ${categorizePlaceOrderState(expectation.finalOrderState)}`,
+  );
+  console.log(
+    `  expectedPaymentState: ${expectation.expectedPaymentState ?? "none"}`,
+  );
+  console.log(
+    `  expectedInventoryState: ${expectation.expectedInventoryState ?? "none"}`,
+  );
+  console.log("  notes:");
+  for (const note of expectation.notes) {
+    console.log(`    - ${note}`);
+  }
   console.log("");
   console.log("Runtime: not implemented");
   process.exit(0);
@@ -31,6 +56,7 @@ if (seedArg !== undefined && Number.isNaN(seed)) {
   throw new Error(`Invalid seed: ${seedArg}`);
 }
 
+const scenarioName = parseScenarioName(scenarioArg);
 const result = await runRegisterUserScenario(scenarioName, { seed });
 
 console.log(result.report);

@@ -140,14 +140,15 @@ It does not generalize into a reusable queue, workflow, or effect runtime.
 
 ## Demo CLI Flow
 
-`npm run demo` defaults to the RegisterUser happy path. `--junction place-order` prints the PlaceOrder static report and does not run a runtime scenario.
+`npm run demo` defaults to the RegisterUser happy path. `--junction place-order` prints the PlaceOrder static report plus scenario expectation state. It still does not run a PlaceOrder runtime scenario.
 
 ```mermaid
 flowchart TD
   Start[npm run demo] --> Args{CLI args}
   Args -->|no --junction<br/>or register-user| Scenario[parse --scenario<br/>default happy-path]
   Args -->|--junction place-order| PlaceReport[print PlaceOrderJunction report]
-  PlaceReport --> PlaceStop[Runtime: not implemented]
+  PlaceReport --> Expectation[print scenario expectation]
+  Expectation --> PlaceStop[Runtime: not implemented]
 
   Scenario --> RunRegister[runRegisterUserScenario]
   RunRegister --> RegisterRuntime[RegisterUserRuntime]
@@ -171,6 +172,7 @@ Supported PlaceOrder command:
 
 ```sh
 npm run demo -- --junction place-order
+npm run demo -- --junction place-order --scenario payment-succeeds-reference-store-fails
 ```
 
 ## RegisterUser Runtime Flow
