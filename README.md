@@ -109,6 +109,7 @@ npm run demo -- --junction place-order --scenario payment-succeeds-reference-sto
 - [Place Order Sample](docs/10-place-order-sample.md)
 - [Implementation Map](docs/11-implementation-map.md)
 - [Place Order Runtime Plan](docs/12-place-order-runtime-plan.md)
+- [Place Order Implementation Checklist](docs/13-place-order-implementation-checklist.md)
 
 ## Status
 
