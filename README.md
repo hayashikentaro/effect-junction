@@ -49,9 +49,9 @@ But they are different kinds of real-world actions:
 
 Effect Junction treats side effects by attribute vectors rather than technology labels. The goal is to derive design prescriptions from attributes, then leave provider-specific details to adapters, policies, or specific handlers.
 
-## First Sample: RegisterUserJunction
+## Current Samples
 
-The first planned working sample is `RegisterUserJunction`.
+`RegisterUserJunction` demonstrates a critical DB write, outbox mail, best-effort analytics, and deterministic failure scenarios.
 
 It coordinates:
 
@@ -59,7 +59,11 @@ It coordinates:
 2. `send-confirmation-mail` as a human-visible outbox effect
 3. `track-signup` as a best-effort analytics effect
 
-The first working sample will use deterministic mock services and scenario-based failures rather than real external services.
+Its deterministic mock runtime covers `happy-path`, `db-fails`, `mail-fails`, `analytics-fails`, `duplicate-dispatch`, and seeded `chaos`.
+
+`PlaceOrderJunction` demonstrates inventory reservation, external payment authorization, payment reference split-brain, outbox receipt/shipment failures, and best-effort analytics failure. Its deterministic mock runtime covers the planned scenario list.
+
+Both runtimes are deterministic mock runtimes for learning Effect Junction semantics. This project is not a production workflow engine or payment framework.
 
 Future TypeScript may move toward a small DSL like:
 
@@ -70,13 +74,9 @@ const registerUser = junction("register-user")
   .bestEffort("track-signup", trackSignup)
 ```
 
-This repository is documentation-first. Runtime work is added only as small samples after the terms, examples, and prescriptions are stable.
+This repository is documentation-first. Runtime work is added only as small educational samples after the terms, examples, and prescriptions are stable.
 
-The current TypeScript sample models attributes, prescriptions, a Junction builder, report output, and a deterministic RegisterUser mock runtime.
-
-The second planned sample is `PlaceOrderJunction`, intended to exercise compensatable external effects, payment references, and reconciliation.
-
-PlaceOrder has an educational deterministic runtime covering the planned scenario list. It is not production infrastructure.
+The current TypeScript sample models attributes, prescriptions, a Junction builder, report output, deterministic RegisterUser and PlaceOrder mock runtimes, and architecture boundary guard tests.
 
 ```sh
 npm install
@@ -118,4 +118,4 @@ npm run demo -- --junction place-order --scenario analytics-fails
 
 ## Status
 
-This is an experimental design repository. The immediate purpose is to make the design concrete enough that a small TypeScript working sample can be implemented next.
+This is an experimental design repository. The current purpose is to keep the design concrete through small TypeScript samples while preserving `src/core` as a provider-agnostic model layer.

@@ -1,12 +1,12 @@
 # Place Order Runtime Plan
 
-This document is a plan for a future `PlaceOrderJunction` runtime sample.
+This document is the scenario-state design reference for the `PlaceOrderJunction` runtime sample.
 
-It is not a payment framework. It is not a production workflow engine. It is a scenario-state plan for demonstrating Effect Junction semantics. Runtime implementation should wait until these states are explicit.
+It is not a payment framework. It is not a production workflow engine. It documents scenario states for demonstrating Effect Junction semantics.
 
-The goal is to reveal partial success, compensation, and reconciliation semantics before writing code.
+The goal is to reveal partial success, compensation, and reconciliation semantics.
 
-Implementation status: all planned PlaceOrder runtime scenarios are implemented as educational deterministic mock slices. This is still not a payment framework or production workflow engine.
+Implementation status: the planned PlaceOrder runtime scenarios are now implemented as deterministic educational mock slices. This document remains useful as the scenario-state design reference. This is still not a payment framework or production workflow engine.
 
 ## Effects Involved
 
@@ -105,7 +105,7 @@ TypeScript state model note:
 
 - `payment-authorization-fails` currently fixes `finalOrderState` as `payment_failed`.
 - `shipment-job-fails` currently fixes `finalOrderState` as `placed`.
-- These can be revised before runtime implementation if the sample policy changes.
+- These can be revised in a future policy change, but the current educational runtime follows them.
 
 ## Compensation And Reconciliation Flow
 
@@ -152,17 +152,15 @@ Reconciliation may need:
 - scheduled job
 - manual decision in unresolved cases
 
-## Future Runtime Shape
+## Runtime Shape
 
-These are documentation examples only. Do not implement them until the scenario-state plan is stable.
+These are documentation examples of the implemented educational runtime shape.
 
-The demo CLI can display static scenario expectations:
+The demo CLI displays scenario expectations and runtime results:
 
 ```sh
 npm run demo -- --junction place-order --scenario payment-succeeds-reference-store-fails
 ```
-
-This still does not execute a PlaceOrder runtime.
 
 ```ts
 type PlaceOrderScenario =
@@ -192,15 +190,14 @@ type PlaceOrderRuntimeSnapshot = {
 }
 ```
 
-## Implementation Gate
+## Implementation Status
 
-Before implementing PlaceOrder runtime, the repository should have:
+The implementation now has:
 
-- this state plan reviewed
-- scenario names finalized
-- expected final states decided
-- compensation semantics decided
-- reconciliation semantics decided
+- scenario names finalized for the planned educational runtime
+- expected final states represented in `place-order-states.ts`
+- deterministic mock services
+- explicit diagnostics for compensation and reconciliation semantics
 - no provider-specific payment behavior inside core
 
 PlaceOrder runtime should remain an educational sample unless the repository intentionally changes direction.

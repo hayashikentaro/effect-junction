@@ -4,9 +4,9 @@ This document is a checklist for the incremental `PlaceOrderJunction` runtime im
 
 This is not a payment framework. This is not a workflow engine. The checklist exists to keep runtime work small, scenario-driven, and educational.
 
-Status: all planned PlaceOrder runtime scenarios are implemented as educational deterministic mock slices. This does not mean the runtime is production-ready payment or workflow infrastructure.
+Status: all planned PlaceOrder runtime scenarios are implemented as educational deterministic mock slices.
 
-Implemented slices:
+Implemented planned slices:
 
 - `happy-path`
 - `inventory-reservation-fails`
@@ -16,9 +16,11 @@ Implemented slices:
 - `shipment-job-fails`
 - `analytics-fails`
 
-Pending slices:
+Pending planned slices:
 
 - none for the planned PlaceOrder runtime scenarios
+
+This does not mean the runtime is production-ready. The runtime remains an educational deterministic mock, not payment or workflow infrastructure.
 
 ## Current Prerequisites
 
@@ -32,7 +34,7 @@ These prerequisites already exist:
 
 ## Runtime Scope
 
-Future PlaceOrder runtime may implement:
+The PlaceOrder runtime implements:
 
 - deterministic scenario execution
 - mock order store
@@ -44,7 +46,7 @@ Future PlaceOrder runtime may implement:
 - state snapshots
 - explicit compensation and reconciliation states
 
-Future PlaceOrder runtime must not implement:
+The PlaceOrder runtime must not implement:
 
 - real payment provider integration
 - real DB
