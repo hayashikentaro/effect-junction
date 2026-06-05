@@ -76,7 +76,9 @@ The current TypeScript sample models attributes, prescriptions, a Junction build
 
 The second planned sample is `PlaceOrderJunction`, intended to exercise compensatable external effects, payment references, and reconciliation.
 
-PlaceOrder runtime is intentionally deferred until the scenario-state plan is stable.
+PlaceOrder failure scenario runtime is intentionally deferred until the scenario-state plan is stable.
+
+PlaceOrder happy-path runtime is available as the first educational slice; failure scenarios remain planned.
 
 ```sh
 npm install

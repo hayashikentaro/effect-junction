@@ -6,6 +6,8 @@ It is not a payment framework. It is not a production workflow engine. It is a s
 
 The goal is to reveal partial success, compensation, and reconciliation semantics before writing code.
 
+Implementation status: happy-path runtime exists as an educational sample. Failure scenarios are still planned and should remain guarded until implemented.
+
 ## Effects Involved
 
 The static `PlaceOrderJunction` model currently includes:

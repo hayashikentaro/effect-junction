@@ -93,7 +93,7 @@ Core non-responsibilities:
 
 ## Sample And Runtime Map
 
-`RegisterUserJunction` has both a static model and a deterministic mock runtime. `PlaceOrderJunction` currently has only a static model/report sample.
+`RegisterUserJunction` has both a static model and a deterministic mock runtime. `PlaceOrderJunction` currently has a static model/report sample and a happy-path runtime only.
 
 ```mermaid
 flowchart TB
@@ -102,7 +102,7 @@ flowchart TB
     PlaceOrderStatic[PlaceOrderJunction<br/>src/samples/place-order.ts]
   end
 
-  subgraph RegisterRuntime["RegisterUser runtime only"]
+  subgraph RegisterRuntime["RegisterUser runtime"]
     ScenarioConfig[Scenario config]
     FaultInjector[FaultInjector]
     MockDB[MockDB]
@@ -110,6 +110,10 @@ flowchart TB
     MockAnalytics[MockAnalytics]
     Outbox[InMemoryOutbox]
     RegisterRuntimeNode[RegisterUserRuntime]
+  end
+
+  subgraph PlaceRuntime["PlaceOrder happy-path runtime only"]
+    PlaceOrderRuntime[place-order-runtime.ts]
   end
 
   Demo[demo.ts]
@@ -124,6 +128,8 @@ flowchart TB
   MockAnalytics --> RegisterRuntimeNode
   Outbox --> RegisterRuntimeNode
   RegisterRuntimeNode --> Demo
+  PlaceOrderStatic --> PlaceOrderRuntime
+  PlaceOrderRuntime --> Demo
   RegisterUserStatic --> Demo
   PlaceOrderStatic --> Demo
 ```
@@ -137,6 +143,8 @@ The runtime exists to demonstrate RegisterUser semantics:
 - outbox item state separated from dispatch attempt history
 
 It does not generalize into a reusable queue, workflow, or effect runtime.
+
+The PlaceOrder runtime currently demonstrates only `happy-path`. Failure scenarios remain planned.
 
 ## Demo CLI Flow
 

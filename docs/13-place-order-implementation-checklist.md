@@ -1,8 +1,10 @@
 # Place Order Implementation Checklist
 
-This document is a checklist for a future `PlaceOrderJunction` runtime implementation.
+This document is a checklist for the incremental `PlaceOrderJunction` runtime implementation.
 
-This is not runtime implementation. This is not a payment framework. This is not a workflow engine. The checklist exists to keep the future runtime small, scenario-driven, and educational.
+This is not a payment framework. This is not a workflow engine. The checklist exists to keep runtime work small, scenario-driven, and educational.
+
+Initial status: happy-path runtime exists as the first implemented slice. Non-happy-path scenarios remain guarded until implemented.
 
 ## Current Prerequisites
 
@@ -188,7 +190,7 @@ type PlaceOrderRuntimeSnapshot = {
 
 1. Result/snapshot types.
 2. Mock services.
-3. Happy-path runtime.
+3. Happy-path runtime. Done as the first implemented slice.
 4. `inventory-reservation-fails`.
 5. `payment-authorization-fails`.
 6. `payment-succeeds-reference-store-fails`.

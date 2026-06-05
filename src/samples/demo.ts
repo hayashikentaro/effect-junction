@@ -1,5 +1,6 @@
 import { runRegisterUserScenario } from "../runtime/register-user-runtime.js";
 import { parseScenarioName } from "../runtime/scenarios.js";
+import { runPlaceOrderScenario } from "../runtime/place-order-runtime.js";
 import {
   categorizePlaceOrderState,
   parsePlaceOrderScenarioName,
@@ -24,6 +25,7 @@ const seed = seedArg === undefined ? undefined : Number(seedArg);
 if (junctionName === "place-order") {
   const scenarioName = parsePlaceOrderScenarioName(scenarioArg);
   const expectation = placeOrderScenarioExpectations[scenarioName];
+  const runtimeResult = await runPlaceOrderScenario(scenarioName);
 
   console.log(PlaceOrderJunction.report());
   console.log("");
@@ -44,7 +46,47 @@ if (junctionName === "place-order") {
     console.log(`    - ${note}`);
   }
   console.log("");
-  console.log("Runtime: not implemented");
+  if (scenarioName !== "happy-path") {
+    console.log(`Runtime: not implemented for this scenario`);
+    console.log("Diagnostics:");
+    for (const diagnostic of runtimeResult.diagnostics) {
+      console.log(`  - ${diagnostic}`);
+    }
+    process.exit(0);
+  }
+
+  console.log("Runtime result:");
+  console.log(`  ok: ${runtimeResult.ok}`);
+  console.log(`  orderState: ${runtimeResult.orderState}`);
+  console.log(`  orderCategory: ${runtimeResult.orderCategory}`);
+  console.log(`  paymentState: ${runtimeResult.paymentState}`);
+  console.log(`  inventoryState: ${runtimeResult.inventoryState}`);
+  console.log(`  orderId: ${runtimeResult.snapshot.order?.id ?? "none"}`);
+  console.log(`  paymentId: ${runtimeResult.snapshot.payment?.id ?? "none"}`);
+  console.log(
+    `  inventoryReservationId: ${runtimeResult.snapshot.inventory?.id ?? "none"}`,
+  );
+  console.log(
+    `  outbox.receipt: ${runtimeResult.snapshot.outbox.receipt.join(", ")}`,
+  );
+  console.log(
+    `  outbox.shipment: ${runtimeResult.snapshot.outbox.shipment.join(", ")}`,
+  );
+  console.log(
+    `  analyticsEvents: ${runtimeResult.snapshot.analyticsEvents.length}`,
+  );
+  console.log("  warnings:");
+  if (runtimeResult.warnings.length === 0) {
+    console.log("    - none");
+  } else {
+    for (const warning of runtimeResult.warnings) {
+      console.log(`    - ${warning}`);
+    }
+  }
+  console.log("  diagnostics:");
+  for (const diagnostic of runtimeResult.diagnostics) {
+    console.log(`    - ${diagnostic}`);
+  }
   process.exit(0);
 }
 
