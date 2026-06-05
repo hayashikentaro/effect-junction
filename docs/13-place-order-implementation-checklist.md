@@ -54,26 +54,18 @@ Future PlaceOrder runtime must not implement:
 - Effect-TS integration
 - provider-specific payment rules in `src/core`
 
-## Proposed Runtime Files
-
-If the implementation stays small, start with:
-
-```txt
-src/runtime/place-order-runtime.ts
-src/tests/place-order-runtime.test.ts
-```
-
-If it starts to grow, split by responsibility:
+## Current Runtime Files
 
 ```txt
 src/runtime/
   place-order-runtime.ts
+  place-order-runtime-types.ts
   place-order-mock-services.ts
   place-order-outbox.ts
-  place-order-scenarios.ts
+src/tests/place-order-runtime.test.ts
 ```
 
-Prefer the smaller structure until the split removes real complexity.
+The runtime is split into scenario orchestration, runtime types, mock services, and outbox state. This split is still educational and not a production workflow engine.
 
 ## Mock Responsibilities
 

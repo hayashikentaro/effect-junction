@@ -34,6 +34,9 @@ flowchart TB
     RegisterUserRuntime[register-user-runtime.ts]
     PlaceOrderStates[place-order-states.ts]
     PlaceOrderRuntime[place-order-runtime.ts]
+    PlaceOrderRuntimeTypes[place-order-runtime-types.ts]
+    PlaceOrderMockServices[place-order-mock-services.ts]
+    PlaceOrderOutbox[place-order-outbox.ts]
   end
 
   subgraph Tests["src/tests"]
@@ -116,7 +119,10 @@ flowchart TB
   end
 
   subgraph PlaceRuntime["PlaceOrder planned scenario runtime"]
-    PlaceOrderRuntime[place-order-runtime.ts]
+    PlaceOrderRuntime[place-order-runtime.ts<br/>scenario orchestration]
+    PlaceOrderRuntimeTypes[place-order-runtime-types.ts]
+    PlaceOrderMockServices[place-order-mock-services.ts]
+    PlaceOrderOutbox[place-order-outbox.ts]
   end
 
   Demo[demo.ts]
@@ -132,6 +138,9 @@ flowchart TB
   Outbox --> RegisterRuntimeNode
   RegisterRuntimeNode --> Demo
   PlaceOrderStatic --> PlaceOrderRuntime
+  PlaceOrderRuntimeTypes --> PlaceOrderRuntime
+  PlaceOrderMockServices --> PlaceOrderRuntime
+  PlaceOrderOutbox --> PlaceOrderRuntime
   PlaceOrderRuntime --> Demo
   RegisterUserStatic --> Demo
   PlaceOrderStatic --> Demo
@@ -148,6 +157,8 @@ The runtime exists to demonstrate RegisterUser semantics:
 It does not generalize into a reusable queue, workflow, or effect runtime.
 
 The PlaceOrder runtime demonstrates the planned scenario list with deterministic mock order, inventory, payment, outbox, and analytics state. Provider-specific policies still stay outside `src/core`.
+
+The PlaceOrder runtime is split into scenario orchestration, mock services, outbox, and runtime types. This split is still educational and not a production workflow engine.
 
 ## Demo CLI Flow
 

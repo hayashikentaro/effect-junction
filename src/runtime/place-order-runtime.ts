@@ -1,209 +1,28 @@
 import { PlaceOrderJunction } from "../samples/place-order.js";
 import {
-  categorizePlaceOrderState,
-  type InventoryState,
-  type PaymentState,
-  type PlaceOrderOutboxState,
-  type PlaceOrderScenarioName,
-  type PlaceOrderState,
-  type PlaceOrderStateCategory,
-} from "./place-order-states.js";
+  MockAnalytics,
+  MockInventory,
+  MockOrderStore,
+  MockPaymentGateway,
+} from "./place-order-mock-services.js";
+import { PlaceOrderOutbox } from "./place-order-outbox.js";
+import {
+  type MockInventoryReservation,
+  type MockOrder,
+  type MockPayment,
+  type PlaceOrderRuntimeResult,
+} from "./place-order-runtime-types.js";
+import { categorizePlaceOrderState, type PlaceOrderScenarioName, type PlaceOrderState } from "./place-order-states.js";
 
-export type MockOrder = {
-  id: string;
-  email: string;
-  total: number;
-  paymentReference?: string;
-};
-
-export type MockPayment = {
-  id: string;
-  idempotencyKey: string;
-  amount: number;
-  status: "authorized";
-};
-
-export type MockInventoryReservation = {
-  id: string;
-  orderId: string;
-  status: "reserved";
-};
-
-export type PlaceOrderRuntimeSnapshot = {
-  order?: MockOrder;
-  payment?: MockPayment;
-  inventory?: MockInventoryReservation;
-  outbox: {
-    receipt: PlaceOrderOutboxState[];
-    shipment: PlaceOrderOutboxState[];
-  };
-  analyticsEvents: unknown[];
-};
-
-export type PlaceOrderRuntimeResult = {
-  implemented: boolean;
-  ok: boolean;
-  scenario: PlaceOrderScenarioName;
-  orderState: PlaceOrderState;
-  orderCategory: PlaceOrderStateCategory;
-  paymentState: PaymentState;
-  inventoryState: InventoryState;
-  warnings: string[];
-  diagnostics: string[];
-  snapshot: PlaceOrderRuntimeSnapshot;
-  report: string;
-};
-
-type PlaceOrderInput = {
-  email: string;
-  total: number;
-};
-
-class MockOrderStore {
-  private order: MockOrder | undefined;
-
-  constructor(
-    private readonly options: { failStorePaymentReference?: boolean } = {},
-  ) {}
-
-  createOrder(input: PlaceOrderInput): MockOrder {
-    this.order = {
-      id: "order-1",
-      email: input.email,
-      total: input.total,
-    };
-    return this.order;
-  }
-
-  storePaymentReference(orderId: string, paymentId: string): MockOrder {
-    if (!this.order || this.order.id !== orderId) {
-      throw new Error(`Order not found: ${orderId}`);
-    }
-    if (this.options.failStorePaymentReference) {
-      throw new Error("Mock payment reference store failed");
-    }
-
-    this.order.paymentReference = paymentId;
-    return this.order;
-  }
-
-  snapshot(): MockOrder | undefined {
-    return this.order === undefined ? undefined : { ...this.order };
-  }
-}
-
-class MockInventory {
-  private reservation: MockInventoryReservation | undefined;
-
-  constructor(private readonly options: { failReservation?: boolean } = {}) {}
-
-  reserveInventory(orderId: string): MockInventoryReservation {
-    if (this.options.failReservation) {
-      throw new Error("Mock inventory reservation failed");
-    }
-
-    this.reservation = {
-      id: "reservation-1",
-      orderId,
-      status: "reserved",
-    };
-    return this.reservation;
-  }
-
-  snapshot(): MockInventoryReservation | undefined {
-    return this.reservation === undefined
-      ? undefined
-      : { ...this.reservation };
-  }
-}
-
-class MockPaymentGateway {
-  private payment: MockPayment | undefined;
-
-  constructor(private readonly options: { failAuthorization?: boolean } = {}) {}
-
-  authorizePayment(input: {
-    amount: number;
-    idempotencyKey: string;
-  }): MockPayment {
-    if (this.options.failAuthorization) {
-      throw new Error("Mock payment authorization failed");
-    }
-
-    this.payment = {
-      id: "payment-1",
-      idempotencyKey: input.idempotencyKey,
-      amount: input.amount,
-      status: "authorized",
-    };
-    return this.payment;
-  }
-
-  snapshot(): MockPayment | undefined {
-    return this.payment === undefined ? undefined : { ...this.payment };
-  }
-}
-
-class PlaceOrderOutbox {
-  readonly receipt: PlaceOrderOutboxState[] = [];
-  readonly shipment: PlaceOrderOutboxState[] = [];
-
-  constructor(
-    private readonly options: {
-      failReceipt?: boolean;
-      failShipment?: boolean;
-    } = {},
-  ) {}
-
-  enqueueReceipt(): void {
-    this.receipt.push(
-      this.options.failReceipt ? "receipt_failed" : "receipt_pending",
-    );
-  }
-
-  enqueueShipment(): void {
-    this.shipment.push(
-      this.options.failShipment ? "shipment_failed" : "shipment_enqueued",
-    );
-  }
-
-  snapshot(): PlaceOrderRuntimeSnapshot["outbox"] {
-    return {
-      receipt: [...this.receipt],
-      shipment: [...this.shipment],
-    };
-  }
-}
-
-class MockAnalytics {
-  readonly events: unknown[] = [];
-
-  constructor(
-    private readonly options: { failTrackOrderCreated?: boolean } = {},
-  ) {}
-
-  trackOrderCreated(orderId: string): void {
-    if (this.options.failTrackOrderCreated) {
-      throw new Error("Mock analytics tracking failed");
-    }
-
-    this.events.push({
-      name: "order_created",
-      orderId,
-    });
-  }
-}
+export type { MockInventoryReservation, MockOrder, MockPayment, PlaceOrderRuntimeResult, PlaceOrderRuntimeSnapshot } from "./place-order-runtime-types.js";
 
 export async function runPlaceOrderScenario(
   scenario: PlaceOrderScenarioName,
 ): Promise<PlaceOrderRuntimeResult> {
   const orderStore = new MockOrderStore({
-    failStorePaymentReference:
-      scenario === "payment-succeeds-reference-store-fails",
+    failStorePaymentReference: scenario === "payment-succeeds-reference-store-fails",
   });
-  const inventory = new MockInventory({
-    failReservation: scenario === "inventory-reservation-fails",
-  });
+  const inventory = new MockInventory({ failReservation: scenario === "inventory-reservation-fails" });
   const paymentGateway = new MockPaymentGateway({
     failAuthorization: scenario === "payment-authorization-fails",
   });
@@ -211,9 +30,7 @@ export async function runPlaceOrderScenario(
     failReceipt: scenario === "receipt-mail-fails",
     failShipment: scenario === "shipment-job-fails",
   });
-  const analytics = new MockAnalytics({
-    failTrackOrderCreated: scenario === "analytics-fails",
-  });
+  const analytics = new MockAnalytics({ failTrackOrderCreated: scenario === "analytics-fails" });
   const diagnostics: string[] = [];
 
   const order = orderStore.createOrder({
