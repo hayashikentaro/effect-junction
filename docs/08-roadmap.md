@@ -100,6 +100,8 @@ Add `PlaceOrderJunction`:
 - external reference storage
 - reconciliation
 
+Initial design doc: [Place Order Sample](10-place-order-sample.md). Runtime implementation is still deferred.
+
 ## Guiding Constraint
 
 Do not turn this into a generic effect runtime. The implementation should remain a working sample of the Effect Junction idea.

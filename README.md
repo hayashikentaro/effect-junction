@@ -74,6 +74,8 @@ This repository is currently documentation-first. Runtime implementation is inte
 
 The current TypeScript sample models attributes, prescriptions, a Junction builder, report output, and a deterministic RegisterUser mock runtime.
 
+The second planned sample is `PlaceOrderJunction`, intended to exercise compensatable external effects, payment references, and reconciliation.
+
 ```sh
 npm install
 npm run build
@@ -99,6 +101,7 @@ npm run demo -- --scenario chaos --seed 42
 - [Monad And World Effect](docs/07-monad-and-world-effect.md)
 - [Roadmap](docs/08-roadmap.md)
 - [Mock Runtime](docs/09-mock-runtime.md)
+- [Place Order Sample](docs/10-place-order-sample.md)
 
 ## Status
 
