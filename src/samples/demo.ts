@@ -1,5 +1,6 @@
 import { runRegisterUserScenario } from "../runtime/register-user-runtime.js";
 import { parseScenarioName } from "../runtime/scenarios.js";
+import { PlaceOrderJunction } from "./place-order.js";
 
 function readArg(name: string): string | undefined {
   const index = process.argv.indexOf(name);
@@ -11,8 +12,20 @@ function readArg(name: string): string | undefined {
 }
 
 const scenarioName = parseScenarioName(readArg("--scenario"));
+const junctionName = readArg("--junction") ?? "register-user";
 const seedArg = readArg("--seed");
 const seed = seedArg === undefined ? undefined : Number(seedArg);
+
+if (junctionName === "place-order") {
+  console.log(PlaceOrderJunction.report());
+  console.log("");
+  console.log("Runtime: not implemented");
+  process.exit(0);
+}
+
+if (junctionName !== "register-user") {
+  throw new Error(`Unknown junction: ${junctionName}`);
+}
 
 if (seedArg !== undefined && Number.isNaN(seed)) {
   throw new Error(`Invalid seed: ${seedArg}`);

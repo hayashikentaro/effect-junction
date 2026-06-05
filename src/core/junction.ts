@@ -12,6 +12,7 @@ export type JunctionBuilder = {
   outbox(effect: WorldEffect): JunctionBuilder;
   bestEffort(effect: WorldEffect): JunctionBuilder;
   compensating(effect: WorldEffect): JunctionBuilder;
+  reconciliation(effect: WorldEffect): JunctionBuilder;
   audit(effect: WorldEffect): JunctionBuilder;
   build(): Junction;
   report(): string;
@@ -38,6 +39,7 @@ export function junction(name: string): JunctionBuilder {
     outbox: (effect) => add("outbox", effect),
     bestEffort: (effect) => add("bestEffort", effect),
     compensating: (effect) => add("compensating", effect),
+    reconciliation: (effect) => add("reconciliation", effect),
     audit: (effect) => add("audit", effect),
     build,
     report: () => createReport(build()),

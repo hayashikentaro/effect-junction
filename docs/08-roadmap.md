@@ -100,7 +100,7 @@ Add `PlaceOrderJunction`:
 - external reference storage
 - reconciliation
 
-Initial design doc: [Place Order Sample](10-place-order-sample.md). Runtime implementation is still deferred.
+Initial design doc: [Place Order Sample](10-place-order-sample.md). A static TypeScript model/report sample exists. Runtime implementation is still deferred.
 
 ## Guiding Constraint
 

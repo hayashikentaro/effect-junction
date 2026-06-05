@@ -5,6 +5,7 @@ export type EffectRole =
   | "outbox"
   | "bestEffort"
   | "compensating"
+  | "reconciliation"
   | "audit";
 
 export type WorldEffect = {
