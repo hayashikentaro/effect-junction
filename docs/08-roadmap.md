@@ -102,6 +102,8 @@ Add `PlaceOrderJunction`:
 
 Initial design doc: [Place Order Sample](10-place-order-sample.md). A static TypeScript model/report sample exists. Runtime implementation is still deferred.
 
+PlaceOrder runtime should come after [Place Order Runtime Plan](12-place-order-runtime-plan.md) stabilizes. Do not mark PlaceOrder runtime as implemented until that work exists.
+
 ## Guiding Constraint
 
 Do not turn this into a generic effect runtime. The implementation should remain a working sample of the Effect Junction idea.

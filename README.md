@@ -76,6 +76,8 @@ The current TypeScript sample models attributes, prescriptions, a Junction build
 
 The second planned sample is `PlaceOrderJunction`, intended to exercise compensatable external effects, payment references, and reconciliation.
 
+PlaceOrder runtime is intentionally deferred until the scenario-state plan is stable.
+
 ```sh
 npm install
 npm run build
@@ -104,6 +106,7 @@ npm run demo -- --junction place-order
 - [Mock Runtime](docs/09-mock-runtime.md)
 - [Place Order Sample](docs/10-place-order-sample.md)
 - [Implementation Map](docs/11-implementation-map.md)
+- [Place Order Runtime Plan](docs/12-place-order-runtime-plan.md)
 
 ## Status
 
