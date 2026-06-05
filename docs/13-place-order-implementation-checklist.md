@@ -4,7 +4,7 @@ This document is a checklist for the incremental `PlaceOrderJunction` runtime im
 
 This is not a payment framework. This is not a workflow engine. The checklist exists to keep runtime work small, scenario-driven, and educational.
 
-Initial status: happy-path, `inventory-reservation-fails`, `payment-authorization-fails`, `payment-succeeds-reference-store-fails`, and `receipt-mail-fails` runtime slices exist. Shipment and analytics failure scenarios remain guarded until implemented.
+Initial status: happy-path, `inventory-reservation-fails`, `payment-authorization-fails`, `payment-succeeds-reference-store-fails`, `receipt-mail-fails`, and `shipment-job-fails` runtime slices exist. The analytics failure scenario remains guarded until implemented.
 
 Implemented slices:
 
@@ -13,10 +13,10 @@ Implemented slices:
 - `payment-authorization-fails`
 - `payment-succeeds-reference-store-fails`
 - `receipt-mail-fails`
+- `shipment-job-fails`
 
 Pending slices:
 
-- `shipment-job-fails`
 - `analytics-fails`
 
 ## Current Prerequisites
@@ -208,7 +208,7 @@ type PlaceOrderRuntimeSnapshot = {
 5. `payment-authorization-fails`. Done as the first compensation-required slice.
 6. `payment-succeeds-reference-store-fails`. Done as the first split-brain reconciliation slice.
 7. Receipt outbox failure. Done as the first non-critical outbox failure slice.
-8. Shipment outbox failure.
+8. Shipment outbox failure. Done as the external keyed pending outbox failure slice.
 9. Analytics best-effort failure.
 10. Demo CLI integration.
 11. Docs update.

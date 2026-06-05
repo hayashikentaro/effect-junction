@@ -149,7 +149,12 @@ class PlaceOrderOutbox {
   readonly receipt: PlaceOrderOutboxState[] = [];
   readonly shipment: PlaceOrderOutboxState[] = [];
 
-  constructor(private readonly options: { failReceipt?: boolean } = {}) {}
+  constructor(
+    private readonly options: {
+      failReceipt?: boolean;
+      failShipment?: boolean;
+    } = {},
+  ) {}
 
   enqueueReceipt(): void {
     this.receipt.push(
@@ -158,7 +163,9 @@ class PlaceOrderOutbox {
   }
 
   enqueueShipment(): void {
-    this.shipment.push("shipment_enqueued");
+    this.shipment.push(
+      this.options.failShipment ? "shipment_failed" : "shipment_enqueued",
+    );
   }
 
   snapshot(): PlaceOrderRuntimeSnapshot["outbox"] {
@@ -188,7 +195,8 @@ export async function runPlaceOrderScenario(
     scenario !== "inventory-reservation-fails" &&
     scenario !== "payment-authorization-fails" &&
     scenario !== "payment-succeeds-reference-store-fails" &&
-    scenario !== "receipt-mail-fails"
+    scenario !== "receipt-mail-fails" &&
+    scenario !== "shipment-job-fails"
   ) {
     const expectation = placeOrderScenarioExpectations[scenario];
     return {
@@ -218,6 +226,7 @@ export async function runPlaceOrderScenario(
   });
   const outbox = new PlaceOrderOutbox({
     failReceipt: scenario === "receipt-mail-fails",
+    failShipment: scenario === "shipment-job-fails",
   });
   const analytics = new MockAnalytics();
   const diagnostics: string[] = [];
@@ -345,7 +354,13 @@ export async function runPlaceOrderScenario(
   }
 
   outbox.enqueueShipment();
-  diagnostics.push("enqueue-shipment-job");
+  if (scenario === "shipment-job-fails") {
+    warnings.push("shipment job failed");
+    diagnostics.push("enqueue-shipment-job failed");
+    diagnostics.push("shipment remains retryable with idempotency key");
+  } else {
+    diagnostics.push("enqueue-shipment-job");
+  }
 
   analytics.trackOrderCreated(order.id);
   diagnostics.push("track-order-created");
