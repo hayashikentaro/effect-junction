@@ -101,6 +101,11 @@ git diff --check
 - Keep `src/core` independent from runtime, samples, tests, and CLI/demo code.
 - Keep provider-specific behavior outside `src/core`.
 - Treat RegisterUser and PlaceOrder runtimes as deterministic educational mock runtimes.
+- Do not over-apply Junction structure everywhere.
+- Keep ordinary implementation fast and lightweight, especially pure transformations, UI display, DTO mapping, local validation, formatters, mock data, and thin single-effect adapters.
+- Add Junction structure when failure-state semantics cross real-world effects.
+- Prefer docs-first design when introducing a new Junction candidate.
+- Use Junctions to mark dangerous side-effect intersections, not as a universal strict architecture template.
 - Do not introduce real external services without an explicit design decision.
 - Do not turn the samples into a generic workflow engine or saga framework.
 - Do not introduce Effect-TS or another effect system without an explicit design reason.

@@ -127,13 +127,55 @@ References:
 - [Place Order Runtime Plan](12-place-order-runtime-plan.md)
 - [Place Order Implementation Checklist](13-place-order-implementation-checklist.md)
 
+## AI-Assisted Development Boundary
+
+Effect Junction is not a call to slow all implementation down. Most local, reversible, pure, or single-effect code can be implemented quickly with AI assistance. Junctions should be introduced where multiple side effects cross and failure leaves meaningful world-state residue.
+
+The goal is to preserve speed outside Junctions while making dangerous intersections explicit.
+
+Good candidates for fast AI-assisted implementation outside a Junction:
+
+- pure transformations
+- UI layout and display
+- DTO mapping
+- local validation
+- list/search/filter screens
+- formatters
+- mock data
+- thin single-effect adapters
+
+Good candidates for explicit Junction design:
+
+- `placeOrder`
+- `registerUser`
+- `cancelSubscription`
+- `refundPayment`
+- `inviteUserToOrganization`
+- `publishArticle`
+- `transferOwnership`
+- `deleteAccount`
+
+Introduce a Junction when:
+
+- multiple effects cross
+- external state may change
+- rollback is insufficient
+- retry can duplicate real-world actions
+- human-visible output may happen
+- compensation or reconciliation is needed
+- operator-visible diagnostics are required
+
+Effect Junction is a way to identify the small number of places where vibe-coded speed must give way to explicit world-state design.
+
 ## Future Work
 
-- improve demo formatting
+- improve browser demo visualization
+- add state diagram visualization if useful
 - add provider policy examples outside core
 - add reconciliation job example outside core
 - add compensation handler example outside core
 - keep core provider-agnostic
+- keep UI outside core
 
 ## Guiding Constraint
 
