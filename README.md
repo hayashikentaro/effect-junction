@@ -117,6 +117,7 @@ npm run demo -- --junction place-order --scenario analytics-fails
 - [Implementation Map](docs/11-implementation-map.md)
 - [Place Order Runtime Plan](docs/12-place-order-runtime-plan.md)
 - [Place Order Implementation Checklist](docs/13-place-order-implementation-checklist.md)
+- [Validation And Handoff](docs/14-validation-and-handoff.md)
 
 ## Status
 
