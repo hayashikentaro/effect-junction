@@ -56,6 +56,8 @@ Initial implementation path: `RegisterUserJunction` sample and a text report dem
 
 The mock runtime should exist only to demonstrate semantics. It should not become a production framework.
 
+Initial implementation path: RegisterUser-only in-memory services, `FaultInjector`, named scenarios, and seeded chaos for demo exploration.
+
 ## Phase 6: Demo CLI
 
 Add a future demo CLI that can run named scenarios:
@@ -71,6 +73,8 @@ npm run demo -- --scenario chaos --seed 42
 
 The CLI should make the Junction report visible without requiring real DB, mail, or analytics services.
 
+Initial implementation path: `npm run demo` accepts `--scenario` and optional `--seed`.
+
 ## Phase 7: Tests
 
 Cover the first sample scenarios:
@@ -80,6 +84,8 @@ Cover the first sample scenarios:
 - analytics failure does not fail registration.
 - duplicate dispatch is skipped by dedupe key.
 - seeded chaos is reproducible, but deterministic scenarios remain the primary tests.
+
+Initial implementation path: Node built-in tests cover the deterministic runtime scenarios and seed reproducibility.
 
 ## Phase 8: Second Sample
 

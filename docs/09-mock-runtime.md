@@ -1,6 +1,6 @@
 # Mock Runtime
 
-The first runtime sample should avoid real external services.
+The first runtime sample avoids real external services.
 
 `RegisterUserJunction` needs to demonstrate semantic differences between DB writes, confirmation mail, analytics, outbox retry, and dedupe behavior. Real databases, mail providers, and analytics SDKs would add setup cost and provider-specific noise before the design vocabulary is stable.
 
@@ -10,11 +10,11 @@ Pure randomness is not enough for the first sample because it makes failures har
 
 Deterministic scenarios are the default for docs and tests. They should make each semantic point visible with a named configuration.
 
-Seeded chaos mode can exist later for demos and exploration, but it should not replace deterministic tests.
+Seeded chaos mode exists for demos and exploration, but it does not replace deterministic tests.
 
 ## FaultInjector
 
-A future mock runtime can route all planned failures through a small `FaultInjector`:
+The mock runtime routes planned failures through a small `FaultInjector`:
 
 ```ts
 type FaultInjector = {
@@ -23,7 +23,7 @@ type FaultInjector = {
 }
 ```
 
-Mock services should ask the injector whether a named effect should fail or delay. They should not call raw `Math.random` internally.
+Mock services ask the injector whether a named effect should fail or delay. They do not call raw `Math.random` internally.
 
 ## Mock Services
 
@@ -42,6 +42,19 @@ These mocks exist to demonstrate semantics, not to model production infrastructu
 - `analytics-fails`: registration succeeds while analytics records a warning.
 - `duplicate-dispatch`: two dispatch attempts use the same dedupe key and the second is skipped.
 - `chaos with seed`: `--seed 42` reproduces the same exploratory failure pattern.
+
+## Demo CLI
+
+```sh
+npm run demo -- --scenario happy-path
+npm run demo -- --scenario db-fails
+npm run demo -- --scenario mail-fails
+npm run demo -- --scenario analytics-fails
+npm run demo -- --scenario duplicate-dispatch
+npm run demo -- --scenario chaos --seed 42
+```
+
+`npm run demo` defaults to `happy-path`.
 
 ## Symptoms Represented
 
