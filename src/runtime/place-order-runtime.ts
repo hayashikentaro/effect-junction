@@ -149,8 +149,12 @@ class PlaceOrderOutbox {
   readonly receipt: PlaceOrderOutboxState[] = [];
   readonly shipment: PlaceOrderOutboxState[] = [];
 
+  constructor(private readonly options: { failReceipt?: boolean } = {}) {}
+
   enqueueReceipt(): void {
-    this.receipt.push("receipt_pending");
+    this.receipt.push(
+      this.options.failReceipt ? "receipt_failed" : "receipt_pending",
+    );
   }
 
   enqueueShipment(): void {
@@ -183,7 +187,8 @@ export async function runPlaceOrderScenario(
     scenario !== "happy-path" &&
     scenario !== "inventory-reservation-fails" &&
     scenario !== "payment-authorization-fails" &&
-    scenario !== "payment-succeeds-reference-store-fails"
+    scenario !== "payment-succeeds-reference-store-fails" &&
+    scenario !== "receipt-mail-fails"
   ) {
     const expectation = placeOrderScenarioExpectations[scenario];
     return {
@@ -211,7 +216,9 @@ export async function runPlaceOrderScenario(
   const paymentGateway = new MockPaymentGateway({
     failAuthorization: scenario === "payment-authorization-fails",
   });
-  const outbox = new PlaceOrderOutbox();
+  const outbox = new PlaceOrderOutbox({
+    failReceipt: scenario === "receipt-mail-fails",
+  });
   const analytics = new MockAnalytics();
   const diagnostics: string[] = [];
 
@@ -328,7 +335,14 @@ export async function runPlaceOrderScenario(
   diagnostics.push("store-payment-reference");
 
   outbox.enqueueReceipt();
-  diagnostics.push("enqueue-receipt-mail");
+  const warnings: string[] = [];
+  if (scenario === "receipt-mail-fails") {
+    warnings.push("receipt mail failed");
+    diagnostics.push("enqueue-receipt-mail failed");
+    diagnostics.push("receipt remains retryable with dedupe key");
+  } else {
+    diagnostics.push("enqueue-receipt-mail");
+  }
 
   outbox.enqueueShipment();
   diagnostics.push("enqueue-shipment-job");
@@ -346,7 +360,7 @@ export async function runPlaceOrderScenario(
     orderCategory: categorizePlaceOrderState(orderState),
     paymentState: "authorized",
     inventoryState: "reserved",
-    warnings: [],
+    warnings,
     diagnostics,
     snapshot: {
       order: { ...storedOrder },

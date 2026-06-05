@@ -148,8 +148,51 @@ test("PlaceOrder payment-succeeds-reference-store-fails requires reconciliation"
   );
 });
 
-test("PlaceOrder non-happy-path scenarios are explicitly not implemented", async () => {
+test("PlaceOrder receipt-mail-fails keeps order placed with retryable outbox state", async () => {
   const result = await runPlaceOrderScenario("receipt-mail-fails");
+
+  assert.equal(result.implemented, true);
+  assert.equal(result.ok, true);
+  assert.equal(result.orderState, "placed");
+  assert.equal(result.orderCategory, "succeeded");
+  assert.equal(result.paymentState, "authorized");
+  assert.equal(result.inventoryState, "reserved");
+  assert.ok(result.snapshot.order);
+  assert.equal(result.snapshot.order.paymentReference, "payment-1");
+  assert.ok(result.snapshot.payment);
+  assert.ok(result.snapshot.inventory);
+  assert.deepEqual(result.snapshot.outbox.receipt, ["receipt_failed"]);
+  assert.deepEqual(result.snapshot.outbox.shipment, ["shipment_enqueued"]);
+  assert.equal(result.snapshot.analyticsEvents.length, 1);
+  assert.ok(result.warnings.includes("receipt mail failed"));
+  assert.deepEqual(
+    result.diagnostics.filter((diagnostic) =>
+      [
+        "create-order",
+        "reserve-inventory",
+        "authorize-payment",
+        "store-payment-reference",
+        "enqueue-receipt-mail failed",
+        "receipt remains retryable with dedupe key",
+        "enqueue-shipment-job",
+        "track-order-created",
+      ].includes(diagnostic),
+    ),
+    [
+      "create-order",
+      "reserve-inventory",
+      "authorize-payment",
+      "store-payment-reference",
+      "enqueue-receipt-mail failed",
+      "receipt remains retryable with dedupe key",
+      "enqueue-shipment-job",
+      "track-order-created",
+    ],
+  );
+});
+
+test("PlaceOrder non-happy-path scenarios are explicitly not implemented", async () => {
+  const result = await runPlaceOrderScenario("shipment-job-fails");
 
   assert.equal(result.implemented, false);
   assert.equal(result.ok, false);
@@ -157,6 +200,6 @@ test("PlaceOrder non-happy-path scenarios are explicitly not implemented", async
   assert.equal(result.orderCategory, "succeeded");
   assert.match(
     result.diagnostics.join("\n"),
-    /PlaceOrder runtime not implemented for receipt-mail-fails/,
+    /PlaceOrder runtime not implemented for shipment-job-fails/,
   );
 });
