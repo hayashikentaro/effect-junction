@@ -97,6 +97,18 @@ Core non-responsibilities:
 - know about demo CLI arguments
 - model production workflow orchestration
 
+## Architecture Guard Tests
+
+`src/tests/architecture-boundaries.test.ts` protects the intended layer direction. It is intentionally lightweight and does not replace a real dependency analyzer.
+
+It checks that:
+
+- `src/core` does not import runtime, samples, tests, or demo code
+- non-demo samples do not import runtime
+- runtime does not import tests
+
+This keeps `src/core` as the stable model layer and keeps mock runtime details outside core.
+
 ## Sample And Runtime Map
 
 `RegisterUserJunction` has both a static model and a deterministic mock runtime. `PlaceOrderJunction` has a static model/report sample and a deterministic mock runtime covering its planned scenario names.
