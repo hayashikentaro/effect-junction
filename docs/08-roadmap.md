@@ -120,6 +120,7 @@ Current status:
 - PlaceOrder deterministic runtime for planned scenarios: done
 - PlaceOrder runtime file split: done
 - architecture boundary guard: done
+- Clean Architecture coexistence guide: available
 
 References:
 
