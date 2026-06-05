@@ -63,6 +63,10 @@ type PlaceOrderInput = {
 class MockOrderStore {
   private order: MockOrder | undefined;
 
+  constructor(
+    private readonly options: { failStorePaymentReference?: boolean } = {},
+  ) {}
+
   createOrder(input: PlaceOrderInput): MockOrder {
     this.order = {
       id: "order-1",
@@ -75,6 +79,9 @@ class MockOrderStore {
   storePaymentReference(orderId: string, paymentId: string): MockOrder {
     if (!this.order || this.order.id !== orderId) {
       throw new Error(`Order not found: ${orderId}`);
+    }
+    if (this.options.failStorePaymentReference) {
+      throw new Error("Mock payment reference store failed");
     }
 
     this.order.paymentReference = paymentId;
@@ -175,7 +182,8 @@ export async function runPlaceOrderScenario(
   if (
     scenario !== "happy-path" &&
     scenario !== "inventory-reservation-fails" &&
-    scenario !== "payment-authorization-fails"
+    scenario !== "payment-authorization-fails" &&
+    scenario !== "payment-succeeds-reference-store-fails"
   ) {
     const expectation = placeOrderScenarioExpectations[scenario];
     return {
@@ -193,7 +201,10 @@ export async function runPlaceOrderScenario(
     };
   }
 
-  const orderStore = new MockOrderStore();
+  const orderStore = new MockOrderStore({
+    failStorePaymentReference:
+      scenario === "payment-succeeds-reference-store-fails",
+  });
   const inventory = new MockInventory({
     failReservation: scenario === "inventory-reservation-fails",
   });
@@ -279,7 +290,41 @@ export async function runPlaceOrderScenario(
   }
   diagnostics.push("authorize-payment");
 
-  const storedOrder = orderStore.storePaymentReference(order.id, payment.id);
+  let storedOrder: MockOrder;
+  try {
+    storedOrder = orderStore.storePaymentReference(order.id, payment.id);
+  } catch {
+    diagnostics.push("store-payment-reference failed");
+    diagnostics.push("external payment authorized");
+    diagnostics.push("local payment reference missing");
+    diagnostics.push("rollback insufficient");
+    diagnostics.push("reconciliation required");
+    diagnostics.push("receipt not enqueued");
+    diagnostics.push("shipment not enqueued");
+    diagnostics.push("analytics not executed");
+
+    const orderState: PlaceOrderState = "reconciliation_required";
+
+    return {
+      implemented: true,
+      ok: false,
+      scenario,
+      orderState,
+      orderCategory: categorizePlaceOrderState(orderState),
+      paymentState: "reference_missing",
+      inventoryState: "reserved",
+      warnings: [],
+      diagnostics,
+      snapshot: {
+        order: orderStore.snapshot(),
+        payment: paymentGateway.snapshot(),
+        inventory: inventory.snapshot(),
+        outbox: outbox.snapshot(),
+        analyticsEvents: [],
+      },
+      report: PlaceOrderJunction.report(),
+    };
+  }
   diagnostics.push("store-payment-reference");
 
   outbox.enqueueReceipt();

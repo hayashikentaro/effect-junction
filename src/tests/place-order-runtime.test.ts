@@ -98,17 +98,65 @@ test("PlaceOrder payment-authorization-fails records compensation requirement", 
   );
 });
 
-test("PlaceOrder non-happy-path scenarios are explicitly not implemented", async () => {
+test("PlaceOrder payment-succeeds-reference-store-fails requires reconciliation", async () => {
   const result = await runPlaceOrderScenario(
     "payment-succeeds-reference-store-fails",
   );
 
-  assert.equal(result.implemented, false);
+  assert.equal(result.implemented, true);
   assert.equal(result.ok, false);
   assert.equal(result.orderState, "reconciliation_required");
   assert.equal(result.orderCategory, "attentionRequired");
+  assert.equal(result.paymentState, "reference_missing");
+  assert.equal(result.inventoryState, "reserved");
+  assert.ok(result.snapshot.order);
+  assert.equal(result.snapshot.order.paymentReference, undefined);
+  assert.ok(result.snapshot.payment);
+  assert.ok(result.snapshot.inventory);
+  assert.deepEqual(result.snapshot.outbox.receipt, []);
+  assert.deepEqual(result.snapshot.outbox.shipment, []);
+  assert.equal(result.snapshot.analyticsEvents.length, 0);
+  assert.deepEqual(
+    result.diagnostics.filter((diagnostic) =>
+      [
+        "create-order",
+        "reserve-inventory",
+        "authorize-payment",
+        "store-payment-reference failed",
+        "external payment authorized",
+        "local payment reference missing",
+        "rollback insufficient",
+        "reconciliation required",
+        "receipt not enqueued",
+        "shipment not enqueued",
+        "analytics not executed",
+      ].includes(diagnostic),
+    ),
+    [
+      "create-order",
+      "reserve-inventory",
+      "authorize-payment",
+      "store-payment-reference failed",
+      "external payment authorized",
+      "local payment reference missing",
+      "rollback insufficient",
+      "reconciliation required",
+      "receipt not enqueued",
+      "shipment not enqueued",
+      "analytics not executed",
+    ],
+  );
+});
+
+test("PlaceOrder non-happy-path scenarios are explicitly not implemented", async () => {
+  const result = await runPlaceOrderScenario("receipt-mail-fails");
+
+  assert.equal(result.implemented, false);
+  assert.equal(result.ok, false);
+  assert.equal(result.orderState, "placed");
+  assert.equal(result.orderCategory, "succeeded");
   assert.match(
     result.diagnostics.join("\n"),
-    /PlaceOrder runtime not implemented for payment-succeeds-reference-store-fails/,
+    /PlaceOrder runtime not implemented for receipt-mail-fails/,
   );
 });
