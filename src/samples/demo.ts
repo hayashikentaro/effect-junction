@@ -7,8 +7,11 @@ import {
   placeOrderScenarioExpectations,
   type PlaceOrderScenarioExpectation,
 } from "../runtime/place-order-states.js";
-import { type PlaceOrderRuntimeResult } from "../runtime/place-order-runtime.js";
 import { type RunScenarioResult } from "../runtime/register-user-runtime.js";
+import {
+  formatList,
+  formatPlaceOrderRuntimeSummary,
+} from "./demo-format.js";
 
 function readArg(name: string): string | undefined {
   const index = process.argv.indexOf(name);
@@ -28,26 +31,9 @@ function printSection(title: string): void {
   console.log(`${title}:`);
 }
 
-function formatOptional(value: unknown): string {
-  if (value === undefined || value === null || value === "") {
-    return "none";
-  }
-
-  return String(value);
-}
-
-function formatArray(values: readonly unknown[]): string {
-  return values.length === 0 ? "[]" : `[${values.join(", ")}]`;
-}
-
-function printList(items: readonly string[], indent = "  "): void {
-  if (items.length === 0) {
-    console.log(`${indent}- none`);
-    return;
-  }
-
-  for (const item of items) {
-    console.log(`${indent}- ${item}`);
+function printLines(lines: readonly string[]): void {
+  for (const line of lines) {
+    console.log(line);
   }
 }
 
@@ -71,44 +57,7 @@ function printPlaceOrderExpectation(
     `  expectedInventoryState: ${expectation.expectedInventoryState ?? "none"}`,
   );
   console.log("  notes:");
-  printList(expectation.notes, "    ");
-}
-
-function printPlaceOrderRuntimeResult(
-  result: PlaceOrderRuntimeResult,
-): void {
-  printSection("Runtime Result");
-  console.log(`  implemented: ${result.implemented}`);
-  console.log(`  ok: ${result.ok}`);
-  console.log(`  orderState: ${result.orderState}`);
-  console.log(`  orderCategory: ${result.orderCategory}`);
-  console.log(`  paymentState: ${result.paymentState}`);
-  console.log(`  inventoryState: ${result.inventoryState}`);
-
-  printSection("Snapshot");
-  console.log("  order:");
-  console.log(`    id: ${formatOptional(result.snapshot.order?.id)}`);
-  console.log(
-    `    paymentReference: ${formatOptional(result.snapshot.order?.paymentReference)}`,
-  );
-  console.log("  payment:");
-  console.log(`    id: ${formatOptional(result.snapshot.payment?.id)}`);
-  console.log(`    status: ${formatOptional(result.snapshot.payment?.status)}`);
-  console.log("  inventory:");
-  console.log(`    id: ${formatOptional(result.snapshot.inventory?.id)}`);
-  console.log(
-    `    status: ${formatOptional(result.snapshot.inventory?.status)}`,
-  );
-  console.log("  outbox:");
-  console.log(`    receipt: ${formatArray(result.snapshot.outbox.receipt)}`);
-  console.log(`    shipment: ${formatArray(result.snapshot.outbox.shipment)}`);
-  console.log(`  analyticsEvents: ${result.snapshot.analyticsEvents.length}`);
-
-  printSection("Warnings");
-  printList(result.warnings);
-
-  printSection("Diagnostics");
-  printList(result.diagnostics);
+  printLines(formatList(expectation.notes, "    "));
 }
 
 function printRegisterUserRuntimeResult(result: RunScenarioResult): void {
@@ -157,7 +106,9 @@ function printRegisterUserRuntimeResult(result: RunScenarioResult): void {
   }
 
   printSection("Warnings");
-  printList(result.registerResult?.warnings ?? result.failure?.warnings ?? []);
+  printLines(
+    formatList(result.registerResult?.warnings ?? result.failure?.warnings ?? []),
+  );
 
   printSection("Diagnostics");
   if (result.scenario.name === "duplicate-dispatch") {
@@ -167,7 +118,7 @@ function printRegisterUserRuntimeResult(result: RunScenarioResult): void {
       )}`,
     );
   } else {
-    printList([]);
+    printLines(formatList([]));
   }
 }
 
@@ -188,7 +139,8 @@ if (junctionName === "place-order") {
   console.log(`  ${scenarioName}`);
   printPlaceOrderExpectation(expectation);
   printReport(runtimeResult.report);
-  printPlaceOrderRuntimeResult(runtimeResult);
+  console.log("");
+  printLines(formatPlaceOrderRuntimeSummary(runtimeResult));
   process.exit(0);
 }
 
