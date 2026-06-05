@@ -46,7 +46,7 @@ if (junctionName === "place-order") {
     console.log(`    - ${note}`);
   }
   console.log("");
-  if (scenarioName !== "happy-path") {
+  if (!runtimeResult.implemented) {
     console.log(`Runtime: not implemented for this scenario`);
     console.log("Diagnostics:");
     for (const diagnostic of runtimeResult.diagnostics) {
@@ -56,6 +56,7 @@ if (junctionName === "place-order") {
   }
 
   console.log("Runtime result:");
+  console.log(`  implemented: ${runtimeResult.implemented}`);
   console.log(`  ok: ${runtimeResult.ok}`);
   console.log(`  orderState: ${runtimeResult.orderState}`);
   console.log(`  orderCategory: ${runtimeResult.orderCategory}`);
@@ -67,10 +68,10 @@ if (junctionName === "place-order") {
     `  inventoryReservationId: ${runtimeResult.snapshot.inventory?.id ?? "none"}`,
   );
   console.log(
-    `  outbox.receipt: ${runtimeResult.snapshot.outbox.receipt.join(", ")}`,
+    `  outbox.receipt: ${runtimeResult.snapshot.outbox.receipt.join(", ") || "none"}`,
   );
   console.log(
-    `  outbox.shipment: ${runtimeResult.snapshot.outbox.shipment.join(", ")}`,
+    `  outbox.shipment: ${runtimeResult.snapshot.outbox.shipment.join(", ") || "none"}`,
   );
   console.log(
     `  analyticsEvents: ${runtimeResult.snapshot.analyticsEvents.length}`,

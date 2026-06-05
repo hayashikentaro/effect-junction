@@ -42,6 +42,7 @@ export type PlaceOrderRuntimeSnapshot = {
 };
 
 export type PlaceOrderRuntimeResult = {
+  implemented: boolean;
   ok: boolean;
   scenario: PlaceOrderScenarioName;
   orderState: PlaceOrderState;
@@ -88,7 +89,13 @@ class MockOrderStore {
 class MockInventory {
   private reservation: MockInventoryReservation | undefined;
 
+  constructor(private readonly options: { failReservation?: boolean } = {}) {}
+
   reserveInventory(orderId: string): MockInventoryReservation {
+    if (this.options.failReservation) {
+      throw new Error("Mock inventory reservation failed");
+    }
+
     this.reservation = {
       id: "reservation-1",
       orderId,
@@ -159,9 +166,13 @@ class MockAnalytics {
 export async function runPlaceOrderScenario(
   scenario: PlaceOrderScenarioName,
 ): Promise<PlaceOrderRuntimeResult> {
-  if (scenario !== "happy-path") {
+  if (
+    scenario !== "happy-path" &&
+    scenario !== "inventory-reservation-fails"
+  ) {
     const expectation = placeOrderScenarioExpectations[scenario];
     return {
+      implemented: false,
       ok: false,
       scenario,
       orderState: expectation.finalOrderState,
@@ -176,7 +187,9 @@ export async function runPlaceOrderScenario(
   }
 
   const orderStore = new MockOrderStore();
-  const inventory = new MockInventory();
+  const inventory = new MockInventory({
+    failReservation: scenario === "inventory-reservation-fails",
+  });
   const paymentGateway = new MockPaymentGateway();
   const outbox = new PlaceOrderOutbox();
   const analytics = new MockAnalytics();
@@ -188,7 +201,36 @@ export async function runPlaceOrderScenario(
   });
   diagnostics.push("create-order");
 
-  const reservation = inventory.reserveInventory(order.id);
+  let reservation: MockInventoryReservation;
+  try {
+    reservation = inventory.reserveInventory(order.id);
+  } catch {
+    diagnostics.push("reserve-inventory failed");
+    diagnostics.push("payment not attempted");
+    diagnostics.push("receipt not enqueued");
+    diagnostics.push("shipment not enqueued");
+    diagnostics.push("analytics not executed");
+
+    const orderState: PlaceOrderState = "failed";
+
+    return {
+      implemented: true,
+      ok: false,
+      scenario,
+      orderState,
+      orderCategory: categorizePlaceOrderState(orderState),
+      paymentState: "not_requested",
+      inventoryState: "not_reserved",
+      warnings: [],
+      diagnostics,
+      snapshot: {
+        order: orderStore.snapshot(),
+        outbox: outbox.snapshot(),
+        analyticsEvents: [],
+      },
+      report: PlaceOrderJunction.report(),
+    };
+  }
   diagnostics.push("reserve-inventory");
 
   const payment = paymentGateway.authorizePayment({
@@ -212,6 +254,7 @@ export async function runPlaceOrderScenario(
   const orderState: PlaceOrderState = "placed";
 
   return {
+    implemented: true,
     ok: true,
     scenario,
     orderState,
