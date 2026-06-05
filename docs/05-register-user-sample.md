@@ -125,6 +125,31 @@ Expected behavior:
 - warning or diagnostic report is recorded.
 - the whole operation is not failed.
 
+### 4. duplicate-dispatch
+
+Purpose:
+
+Show why a human-visible, irreversible, `dedupeRequired` mail effect cannot be treated as a simple retry problem.
+
+Expected behavior:
+
+- `dispatchOutbox` is called twice.
+- without a dedupe key, the same confirmation mail could be sent twice.
+- with a dedupe key, the second dispatch is skipped.
+- this shows that `dedupeRequired` is not just a retry policy; it is an attribute that prevents irreversible duplicate effects in the real world.
+
+### 5. chaos with seed
+
+Purpose:
+
+Explore failure behavior with reproducible seeded randomness, not uncontrolled randomness.
+
+Expected behavior:
+
+- passing a seed such as `--seed 42` reproduces the same result.
+- seeded chaos is for demos and exploration, not the primary test strategy.
+- core tests use deterministic scenarios.
+
 ## Future TypeScript Shape
 
 This repository does not implement the runtime yet, but the intended direction is:

@@ -59,6 +59,8 @@ It coordinates:
 2. `send-confirmation-mail` as a human-visible outbox effect
 3. `track-signup` as a best-effort analytics effect
 
+The first working sample will use deterministic mock services and scenario-based failures rather than real external services.
+
 Future TypeScript may move toward a small DSL like:
 
 ```ts
@@ -81,6 +83,7 @@ This repository is currently documentation-first. Runtime implementation is inte
 - [Clean Architecture Boundary](docs/06-clean-architecture-boundary.md)
 - [Monad And World Effect](docs/07-monad-and-world-effect.md)
 - [Roadmap](docs/08-roadmap.md)
+- [Mock Runtime](docs/09-mock-runtime.md)
 
 ## Status
 
