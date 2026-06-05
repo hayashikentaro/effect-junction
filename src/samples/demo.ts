@@ -5,8 +5,10 @@ import {
   categorizePlaceOrderState,
   parsePlaceOrderScenarioName,
   placeOrderScenarioExpectations,
+  type PlaceOrderScenarioExpectation,
 } from "../runtime/place-order-states.js";
-import { PlaceOrderJunction } from "./place-order.js";
+import { type PlaceOrderRuntimeResult } from "../runtime/place-order-runtime.js";
+import { type RunScenarioResult } from "../runtime/register-user-runtime.js";
 
 function readArg(name: string): string | undefined {
   const index = process.argv.indexOf(name);
@@ -15,6 +17,158 @@ function readArg(name: string): string | undefined {
   }
 
   return process.argv[index + 1];
+}
+
+function printHeader(): void {
+  console.log("=== Effect Junction Demo ===");
+}
+
+function printSection(title: string): void {
+  console.log("");
+  console.log(`${title}:`);
+}
+
+function formatOptional(value: unknown): string {
+  if (value === undefined || value === null || value === "") {
+    return "none";
+  }
+
+  return String(value);
+}
+
+function formatArray(values: readonly unknown[]): string {
+  return values.length === 0 ? "[]" : `[${values.join(", ")}]`;
+}
+
+function printList(items: readonly string[], indent = "  "): void {
+  if (items.length === 0) {
+    console.log(`${indent}- none`);
+    return;
+  }
+
+  for (const item of items) {
+    console.log(`${indent}- ${item}`);
+  }
+}
+
+function printReport(report: string): void {
+  printSection("Report");
+  console.log(report);
+}
+
+function printPlaceOrderExpectation(
+  expectation: PlaceOrderScenarioExpectation,
+): void {
+  printSection("Scenario Expectation");
+  console.log(`  finalOrderState: ${expectation.finalOrderState}`);
+  console.log(
+    `  category: ${categorizePlaceOrderState(expectation.finalOrderState)}`,
+  );
+  console.log(
+    `  expectedPaymentState: ${expectation.expectedPaymentState ?? "none"}`,
+  );
+  console.log(
+    `  expectedInventoryState: ${expectation.expectedInventoryState ?? "none"}`,
+  );
+  console.log("  notes:");
+  printList(expectation.notes, "    ");
+}
+
+function printPlaceOrderRuntimeResult(
+  result: PlaceOrderRuntimeResult,
+): void {
+  printSection("Runtime Result");
+  console.log(`  implemented: ${result.implemented}`);
+  console.log(`  ok: ${result.ok}`);
+  console.log(`  orderState: ${result.orderState}`);
+  console.log(`  orderCategory: ${result.orderCategory}`);
+  console.log(`  paymentState: ${result.paymentState}`);
+  console.log(`  inventoryState: ${result.inventoryState}`);
+
+  printSection("Snapshot");
+  console.log("  order:");
+  console.log(`    id: ${formatOptional(result.snapshot.order?.id)}`);
+  console.log(
+    `    paymentReference: ${formatOptional(result.snapshot.order?.paymentReference)}`,
+  );
+  console.log("  payment:");
+  console.log(`    id: ${formatOptional(result.snapshot.payment?.id)}`);
+  console.log(`    status: ${formatOptional(result.snapshot.payment?.status)}`);
+  console.log("  inventory:");
+  console.log(`    id: ${formatOptional(result.snapshot.inventory?.id)}`);
+  console.log(
+    `    status: ${formatOptional(result.snapshot.inventory?.status)}`,
+  );
+  console.log("  outbox:");
+  console.log(`    receipt: ${formatArray(result.snapshot.outbox.receipt)}`);
+  console.log(`    shipment: ${formatArray(result.snapshot.outbox.shipment)}`);
+  console.log(`  analyticsEvents: ${result.snapshot.analyticsEvents.length}`);
+
+  printSection("Warnings");
+  printList(result.warnings);
+
+  printSection("Diagnostics");
+  printList(result.diagnostics);
+}
+
+function printRegisterUserRuntimeResult(result: RunScenarioResult): void {
+  printSection("Runtime Result");
+  if (result.registerResult) {
+    console.log(`  ok: ${result.registerResult.ok}`);
+    console.log(`  userId: ${result.registerResult.user.id}`);
+    console.log(`  email: ${result.registerResult.user.email}`);
+  } else if (result.failure) {
+    console.log("  ok: false");
+    console.log(`  error: ${result.failure.error}`);
+  }
+  console.log(`  sentMailCount: ${result.runtime.sentMessages.length}`);
+  console.log(`  analyticsEvents: ${result.runtime.analyticsEvents.length}`);
+
+  printSection("Outbox");
+  console.log("  items:");
+  if (result.runtime.outbox.items.length === 0) {
+    console.log("    - none");
+  } else {
+    for (const item of result.runtime.outbox.items) {
+      console.log(`    - id: ${item.id}`);
+      console.log(`      effectName: ${item.effectName}`);
+      console.log(`      status: ${item.status}`);
+      console.log(`      attempts: ${item.attempts}`);
+      console.log(`      dedupeKey: ${item.dedupeKey}`);
+      if (item.lastError) {
+        console.log(`      lastError: ${item.lastError}`);
+      }
+    }
+  }
+
+  console.log("  dispatch attempts:");
+  if (result.runtime.outbox.attempts.length === 0) {
+    console.log("    - none");
+  } else {
+    for (const attempt of result.runtime.outbox.attempts) {
+      console.log(`    - itemId: ${attempt.itemId}`);
+      console.log(`      attempt: ${attempt.attempt}`);
+      console.log(`      status: ${attempt.status}`);
+      console.log(`      dedupeKey: ${attempt.dedupeKey}`);
+      if (attempt.error) {
+        console.log(`      error: ${attempt.error}`);
+      }
+    }
+  }
+
+  printSection("Warnings");
+  printList(result.registerResult?.warnings ?? result.failure?.warnings ?? []);
+
+  printSection("Diagnostics");
+  if (result.scenario.name === "duplicate-dispatch") {
+    console.log(
+      `  - duplicate dispatch skipped: ${result.runtime.outbox.attempts.some(
+        (attempt) => attempt.status.startsWith("skipped"),
+      )}`,
+    );
+  } else {
+    printList([]);
+  }
 }
 
 const junctionName = readArg("--junction") ?? "register-user";
@@ -27,67 +181,14 @@ if (junctionName === "place-order") {
   const expectation = placeOrderScenarioExpectations[scenarioName];
   const runtimeResult = await runPlaceOrderScenario(scenarioName);
 
-  console.log(PlaceOrderJunction.report());
-  console.log("");
-  console.log("Scenario expectation:");
-  console.log(`  scenario: ${expectation.scenario}`);
-  console.log(`  finalOrderState: ${expectation.finalOrderState}`);
-  console.log(
-    `  category: ${categorizePlaceOrderState(expectation.finalOrderState)}`,
-  );
-  console.log(
-    `  expectedPaymentState: ${expectation.expectedPaymentState ?? "none"}`,
-  );
-  console.log(
-    `  expectedInventoryState: ${expectation.expectedInventoryState ?? "none"}`,
-  );
-  console.log("  notes:");
-  for (const note of expectation.notes) {
-    console.log(`    - ${note}`);
-  }
-  console.log("");
-  if (!runtimeResult.implemented) {
-    console.log(`Runtime: not implemented for this scenario`);
-    console.log("Diagnostics:");
-    for (const diagnostic of runtimeResult.diagnostics) {
-      console.log(`  - ${diagnostic}`);
-    }
-    process.exit(0);
-  }
-
-  console.log("Runtime result:");
-  console.log(`  implemented: ${runtimeResult.implemented}`);
-  console.log(`  ok: ${runtimeResult.ok}`);
-  console.log(`  orderState: ${runtimeResult.orderState}`);
-  console.log(`  orderCategory: ${runtimeResult.orderCategory}`);
-  console.log(`  paymentState: ${runtimeResult.paymentState}`);
-  console.log(`  inventoryState: ${runtimeResult.inventoryState}`);
-  console.log(`  orderId: ${runtimeResult.snapshot.order?.id ?? "none"}`);
-  console.log(`  paymentId: ${runtimeResult.snapshot.payment?.id ?? "none"}`);
-  console.log(
-    `  inventoryReservationId: ${runtimeResult.snapshot.inventory?.id ?? "none"}`,
-  );
-  console.log(
-    `  outbox.receipt: ${runtimeResult.snapshot.outbox.receipt.join(", ") || "none"}`,
-  );
-  console.log(
-    `  outbox.shipment: ${runtimeResult.snapshot.outbox.shipment.join(", ") || "none"}`,
-  );
-  console.log(
-    `  analyticsEvents: ${runtimeResult.snapshot.analyticsEvents.length}`,
-  );
-  console.log("  warnings:");
-  if (runtimeResult.warnings.length === 0) {
-    console.log("    - none");
-  } else {
-    for (const warning of runtimeResult.warnings) {
-      console.log(`    - ${warning}`);
-    }
-  }
-  console.log("  diagnostics:");
-  for (const diagnostic of runtimeResult.diagnostics) {
-    console.log(`    - ${diagnostic}`);
-  }
+  printHeader();
+  printSection("Junction");
+  console.log("  place-order");
+  printSection("Scenario");
+  console.log(`  ${scenarioName}`);
+  printPlaceOrderExpectation(expectation);
+  printReport(runtimeResult.report);
+  printPlaceOrderRuntimeResult(runtimeResult);
   process.exit(0);
 }
 
@@ -102,65 +203,13 @@ if (seedArg !== undefined && Number.isNaN(seed)) {
 const scenarioName = parseScenarioName(scenarioArg);
 const result = await runRegisterUserScenario(scenarioName, { seed });
 
-console.log(result.report);
-console.log("");
-console.log(`Scenario: ${result.scenario.name}`);
+printHeader();
+printSection("Junction");
+console.log("  register-user");
+printSection("Scenario");
+console.log(`  ${result.scenario.name}`);
 if (result.scenario.seed !== undefined) {
-  console.log(`Seed: ${result.scenario.seed}`);
+  console.log(`  seed: ${result.scenario.seed}`);
 }
-
-console.log("");
-console.log("RegisterUser:");
-if (result.registerResult) {
-  console.log(`  ok: ${result.registerResult.ok}`);
-  console.log(`  user: ${result.registerResult.user.id} <${result.registerResult.user.email}>`);
-} else if (result.failure) {
-  console.log("  ok: false");
-  console.log(`  error: ${result.failure.error}`);
-}
-
-console.log("");
-console.log("Outbox:");
-for (const item of result.runtime.outbox.items) {
-  const error = item.lastError ? ` lastError=${item.lastError}` : "";
-  console.log(
-    `  - ${item.id} ${item.effectName} status=${item.status} attempts=${item.attempts} dedupeKey=${item.dedupeKey}${error}`,
-  );
-}
-if (result.runtime.outbox.items.length === 0) {
-  console.log("  - none");
-}
-
-console.log("");
-console.log("Dispatch attempts:");
-for (const attempt of result.runtime.outbox.attempts) {
-  const error = attempt.error ? ` error=${attempt.error}` : "";
-  console.log(
-    `  - ${attempt.itemId} attempt=${attempt.attempt} status=${attempt.status} dedupeKey=${attempt.dedupeKey}${error}`,
-  );
-}
-if (result.runtime.outbox.attempts.length === 0) {
-  console.log("  - none");
-}
-
-console.log("");
-console.log(`Sent mail count: ${result.runtime.sentMessages.length}`);
-console.log(`Analytics events: ${result.runtime.analyticsEvents.length}`);
-
-console.log("");
-console.log("Warnings:");
-for (const warning of result.registerResult?.warnings ?? result.failure?.warnings ?? []) {
-  console.log(`  - ${warning}`);
-}
-if ((result.registerResult?.warnings ?? result.failure?.warnings ?? []).length === 0) {
-  console.log("  - none");
-}
-
-if (result.scenario.name === "duplicate-dispatch") {
-  console.log("");
-  console.log(
-    `Duplicate dispatch skipped: ${result.runtime.outbox.attempts.some(
-      (attempt) => attempt.status.startsWith("skipped"),
-    )}`,
-  );
-}
+printReport(result.report);
+printRegisterUserRuntimeResult(result);

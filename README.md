@@ -78,6 +78,8 @@ This repository is documentation-first. Runtime work is added only as small educ
 
 The current TypeScript sample models attributes, prescriptions, a Junction builder, report output, deterministic RegisterUser and PlaceOrder mock runtimes, and architecture boundary guard tests.
 
+The demo output is sectioned to show the report, scenario expectation when available, runtime result, snapshot or outbox state, warnings, and diagnostics.
+
 ```sh
 npm install
 npm run build
