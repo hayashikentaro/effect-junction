@@ -7,7 +7,9 @@
   "scripts": {
     "build": "tsc",
     "demo": "node dist/samples/demo.js",
-    "test": "node --test dist/tests/*.test.js"
+    "test": "node --test dist/tests/*.test.js",
+    "web:build": "tsc && mkdir -p dist/web && cp src/web/index.html dist/web/index.html && cp src/web/styles.css dist/web/styles.css",
+    "web:serve": "npm run web:build && python3 -m http.server 4173 -d dist"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

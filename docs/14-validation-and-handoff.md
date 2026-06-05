@@ -53,6 +53,7 @@ This is not a production workflow engine. This is not a payment framework. It is
 - sectioned CLI output for report, scenario, runtime result, snapshots, warnings, and diagnostics
 - pure formatter helpers in `src/samples/demo-format.ts`
 - formatter tests in `src/tests/demo-format.test.ts`
+- dependency-free browser UI in `src/web/`
 
 ### Guardrails
 
@@ -76,6 +77,8 @@ npm run demo -- --scenario chaos --seed 42
 npm run demo -- --junction place-order
 npm run demo -- --junction place-order --scenario payment-succeeds-reference-store-fails
 npm run demo -- --junction place-order --scenario analytics-fails
+npm run web:build
+npm run web:serve
 ```
 
 For documentation-only changes, at minimum run:
@@ -91,6 +94,7 @@ git diff --check
 - `duplicate-dispatch` shows one sent mail plus a second `skippedTerminal` dispatch attempt.
 - `payment-succeeds-reference-store-fails` shows `reconciliation_required`, an authorized external payment, no receipt/shipment outbox items, and diagnostics for the split-brain condition.
 - `analytics-fails` for PlaceOrder keeps `ok: true`, `orderState: placed`, and records an analytics warning/diagnostic without blocking the critical path.
+- `npm run web:serve` serves the plain browser demo at `http://localhost:4173/web/`.
 
 ## Handoff Notes
 
@@ -115,4 +119,5 @@ git diff --check
 - PlaceOrder outbox: `src/runtime/place-order-outbox.ts`
 - Demo CLI: `src/samples/demo.ts`
 - Demo formatting helpers: `src/samples/demo-format.ts`
+- Browser demo: `src/web/`
 - Architecture guard tests: `src/tests/architecture-boundaries.test.ts`

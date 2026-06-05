@@ -99,7 +99,13 @@ npm run demo -- --junction place-order --scenario payment-succeeds-reference-sto
 npm run demo -- --junction place-order --scenario receipt-mail-fails
 npm run demo -- --junction place-order --scenario shipment-job-fails
 npm run demo -- --junction place-order --scenario analytics-fails
+npm run web:build
+npm run web:serve
 ```
+
+The browser demo is a dependency-free plain HTML/TypeScript UI for selecting RegisterUser and PlaceOrder scenarios and viewing reports, runtime results, snapshots, warnings, and diagnostics.
+
+After `npm run web:serve`, open `http://localhost:4173/web/`.
 
 ## Documentation
 
