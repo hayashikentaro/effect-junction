@@ -72,6 +72,14 @@ const registerUser = junction("register-user")
 
 This repository is currently documentation-first. Runtime implementation is intentionally deferred until the terms, examples, and prescriptions are stable.
 
+The current TypeScript sample models attributes, prescriptions, a Junction builder, and report output. Runtime/mock execution is still deferred.
+
+```sh
+npm run build
+npm test
+npm run demo
+```
+
 ## Documentation
 
 - [Overview](docs/00-overview.md)

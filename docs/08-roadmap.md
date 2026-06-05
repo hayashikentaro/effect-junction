@@ -19,12 +19,16 @@ The project is design-first. Runtime code should follow the documented vocabular
 
 The model should be small and readable. It should not require Effect-TS.
 
+Initial implementation path: plain TypeScript metadata types under `src/core`.
+
 ## Phase 3: Prescription Engine
 
 - `derivePrescriptions(effect)`
 - rules for common attribute combinations
 - warnings for dangerous combinations
 - simple report output
+
+Initial implementation path: deterministic prescription objects with code, level, and reason.
 
 ## Phase 4: Junction Builder
 
@@ -34,6 +38,8 @@ The model should be small and readable. It should not require Effect-TS.
 - `.bestEffort(...)`
 - `.compensating(...)`
 - report generation
+
+Initial implementation path: `RegisterUserJunction` sample and a text report demo.
 
 ## Phase 5: Deterministic Mock Runtime
 

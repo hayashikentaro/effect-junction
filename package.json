@@ -1,0 +1,16 @@
+{
+  "name": "effect-junction",
+  "version": "0.1.0",
+  "description": "Design-first TypeScript model for Effect Junction attributes, prescriptions, and reports.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "demo": "node dist/samples/demo.js",
+    "test": "node --test dist/tests/*.test.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}
