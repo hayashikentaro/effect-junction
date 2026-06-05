@@ -44,6 +44,7 @@ flowchart TB
     PlaceOrderModelTests[place-order.test.ts]
     RuntimeTests[register-user-runtime.test.ts]
     PlaceOrderRuntimeTests[place-order-runtime.test.ts]
+    ArchitectureBoundaryTests[architecture-boundaries.test.ts]
   end
 
   Vocabulary --> Core
@@ -96,18 +97,6 @@ Core non-responsibilities:
 - know about DB, mail, analytics, payments, or shipping
 - know about demo CLI arguments
 - model production workflow orchestration
-
-## Architecture Guard Tests
-
-`src/tests/architecture-boundaries.test.ts` protects the intended layer direction. It is intentionally lightweight and does not replace a real dependency analyzer.
-
-It checks that:
-
-- `src/core` does not import runtime, samples, tests, or demo code
-- non-demo samples do not import runtime
-- runtime does not import tests
-
-This keeps `src/core` as the stable model layer and keeps mock runtime details outside core.
 
 ## Sample And Runtime Map
 
@@ -277,48 +266,70 @@ In `duplicate-dispatch`, the item remains `sent` after the first successful disp
 flowchart TB
   RegisterModel[register-user.test.ts] --> CoreReports[core prescriptions and reports]
   PlaceModel[place-order.test.ts] --> CoreReports
-  RuntimeTests[register-user-runtime.test.ts] --> RegisterRuntime[RegisterUser runtime]
+  RegisterRuntimeTests[register-user-runtime.test.ts] --> RegisterRuntime[RegisterUser runtime]
+  PlaceRuntimeTests[place-order-runtime.test.ts] --> PlaceOrderRuntime[PlaceOrder runtime]
+  ArchitectureTests[architecture-boundaries.test.ts] --> Boundaries[layer dependency rules]
 
   RegisterModel --> RegisterStatic[RegisterUser static sample]
   PlaceModel --> PlaceStatic[PlaceOrder static sample]
-  RuntimeTests --> Scenarios[happy/db/mail/analytics/duplicate/chaos]
+  RegisterRuntimeTests --> RegisterScenarios[happy/db/mail/analytics/duplicate/chaos]
+  PlaceRuntimeTests --> PlaceScenarios[happy/inventory/payment/reference/receipt/shipment/analytics]
+  ArchitectureTests --> CoreBoundary[src/core isolation]
 ```
 
 Tests intentionally avoid real external services.
 
 ## Dependency Rules
 
-- `src/core` must stay independent from `src/runtime`.
+- `src/core` must stay independent from `src/runtime`, `src/samples`, `src/tests`, and CLI/demo code.
 - `src/samples` may depend on `src/core`.
-- `src/runtime` may depend on `src/core` and RegisterUser sample metadata, but should remain RegisterUser-specific for now.
+- non-demo sample files should not depend on `src/runtime`.
 - `src/samples/demo.ts` may depend on samples and runtime because it is the CLI boundary.
-- `src/tests` may depend on all layers.
-- PlaceOrder has no runtime until explicitly implemented.
+- `src/runtime` may depend on `src/core` and sample metadata, but must not depend on tests.
+- `src/tests` may depend on all layers they verify.
+- RegisterUser and PlaceOrder runtimes are deterministic educational mock runtimes, not production workflow engines.
+
+## Architecture Guard Tests
+
+`src/tests/architecture-boundaries.test.ts` protects the intended layer direction. It is intentionally lightweight and regex-based. It does not replace a full dependency analyzer.
+
+It checks that:
+
+- core does not import runtime, samples, tests, or demo
+- non-demo samples do not import runtime
+- runtime does not import tests
+
+This keeps `src/core` as the stable model layer and keeps mock runtime details outside core.
 
 ## Future Extension Points
 
-`PlaceOrderJunction` currently has a static model/report sample. Its runtime should not be implemented until scenario states are explicit.
+PlaceOrder now has an educational deterministic runtime covering the planned scenario list.
 
-A future PlaceOrder runtime will likely need:
+Future work should not make `src/core` provider-specific or turn the runtime into a production workflow engine.
 
-- external reference store
-- compensation handler
-- reconciliation job
-- explicit partial-success states
-- provider-specific policy seams
+Potential future extension points:
+
+- richer provider policy seams outside `src/core`
+- explicit compensation handler examples
+- reconciliation job examples
+- external reference store examples
+- retry policy examples for outbox effects
+- better demo formatting
+- optional adapters under a separate non-core layer
 
 ```mermaid
 flowchart TB
   Core[src/core] --> StaticSamples[static samples]
   StaticSamples --> RegisterRuntime[RegisterUser mock runtime]
-  StaticSamples --> FuturePlaceOrder[future PlaceOrder runtime]
+  StaticSamples --> PlaceOrderRuntime[PlaceOrder mock runtime]
 
-  FuturePlaceOrder --> ExternalRef[external reference store]
-  FuturePlaceOrder --> Compensation[compensation handler]
-  FuturePlaceOrder --> Reconciliation[reconciliation job]
-  FuturePlaceOrder --> ProviderPolicies[provider-specific policies]
+  PlaceOrderRuntime --> FutureAdapters[future adapters / policies]
+  FutureAdapters --> ExternalRef[external reference store example]
+  FutureAdapters --> Compensation[compensation handler example]
+  FutureAdapters --> Reconciliation[reconciliation job example]
+  FutureAdapters --> RetryPolicy[retry policy example]
 
-  ProviderPolicies -. must not enter .-> Core
+  FutureAdapters -. must not enter .-> Core
 ```
 
 Provider-specific behavior should stay outside `src/core`. Core should continue to model attributes, effects, prescriptions, junctions, and reports.
