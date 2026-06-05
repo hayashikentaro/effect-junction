@@ -50,6 +50,18 @@ if (result.runtime.outbox.items.length === 0) {
 }
 
 console.log("");
+console.log("Dispatch attempts:");
+for (const attempt of result.runtime.outbox.attempts) {
+  const error = attempt.error ? ` error=${attempt.error}` : "";
+  console.log(
+    `  - ${attempt.itemId} attempt=${attempt.attempt} status=${attempt.status} dedupeKey=${attempt.dedupeKey}${error}`,
+  );
+}
+if (result.runtime.outbox.attempts.length === 0) {
+  console.log("  - none");
+}
+
+console.log("");
 console.log(`Sent mail count: ${result.runtime.sentMessages.length}`);
 console.log(`Analytics events: ${result.runtime.analyticsEvents.length}`);
 
@@ -65,6 +77,8 @@ if ((result.registerResult?.warnings ?? result.failure?.warnings ?? []).length =
 if (result.scenario.name === "duplicate-dispatch") {
   console.log("");
   console.log(
-    `Duplicate dispatch skipped: ${result.runtime.skippedDedupeKeys.length > 0}`,
+    `Duplicate dispatch skipped: ${result.runtime.outbox.attempts.some(
+      (attempt) => attempt.status.startsWith("skipped"),
+    )}`,
   );
 }

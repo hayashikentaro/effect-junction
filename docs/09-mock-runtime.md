@@ -34,6 +34,27 @@ Mock services ask the injector whether a named effect should fail or delay. They
 
 These mocks exist to demonstrate semantics, not to model production infrastructure.
 
+## Outbox State
+
+The outbox separates durable item state from dispatch attempt history.
+
+Item status is the current state of work:
+
+- `pending`
+- `sent`
+- `failed`
+
+Dispatch attempt status records what happened during each dispatch:
+
+- `sent`
+- `failed`
+- `skippedDuplicate`
+- `skippedTerminal`
+
+`dispatchAll` retries `failed` items in this sample. A `sent` item is terminal, so later dispatches do not call the mailer again. The item remains `sent`, and the attempt history records `skippedTerminal`.
+
+This keeps `duplicate-dispatch` honest: the second dispatch is visible, but it does not overwrite the durable item state or send a second message.
+
 ## Scenario List
 
 - `happy-path`: user is created, mail is queued and dispatched, analytics succeeds.

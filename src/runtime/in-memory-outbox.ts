@@ -1,6 +1,21 @@
 import type { MockMailer } from "./mock-services.js";
 
-export type OutboxStatus = "pending" | "sent" | "failed" | "skipped";
+export type OutboxStatus = "pending" | "sent" | "failed";
+
+export type DispatchAttemptStatus =
+  | "sent"
+  | "failed"
+  | "skippedDuplicate"
+  | "skippedTerminal";
+
+export type DispatchAttempt = {
+  itemId: string;
+  effectName: "send-confirmation-mail";
+  attempt: number;
+  status: DispatchAttemptStatus;
+  dedupeKey: string;
+  error?: string;
+};
 
 export type OutboxItem = {
   id: string;
@@ -14,10 +29,12 @@ export type OutboxItem = {
 
 export type OutboxSnapshot = {
   items: OutboxItem[];
+  attempts: DispatchAttempt[];
 };
 
 export class InMemoryOutbox {
   private readonly items: OutboxItem[] = [];
+  private readonly attempts: DispatchAttempt[] = [];
 
   enqueueConfirmationMail(input: {
     email: string;
@@ -39,13 +56,25 @@ export class InMemoryOutbox {
     for (const item of this.items) {
       item.attempts += 1;
 
+      if (item.status === "sent") {
+        this.recordAttempt(item, "skippedTerminal");
+        continue;
+      }
+
       try {
         const result = await mailer.sendConfirmation(item.email, item.dedupeKey);
-        item.status = result.status;
-        delete item.lastError;
+        if (result.status === "skipped") {
+          this.recordAttempt(item, "skippedDuplicate");
+        } else {
+          item.status = "sent";
+          delete item.lastError;
+          this.recordAttempt(item, "sent");
+        }
       } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
         item.status = "failed";
-        item.lastError = error instanceof Error ? error.message : String(error);
+        item.lastError = message;
+        this.recordAttempt(item, "failed", message);
       }
     }
 
@@ -55,6 +84,22 @@ export class InMemoryOutbox {
   snapshot(): OutboxSnapshot {
     return {
       items: this.items.map((item) => ({ ...item })),
+      attempts: this.attempts.map((attempt) => ({ ...attempt })),
     };
+  }
+
+  private recordAttempt(
+    item: OutboxItem,
+    status: DispatchAttemptStatus,
+    error?: string,
+  ): void {
+    this.attempts.push({
+      itemId: item.id,
+      effectName: item.effectName,
+      attempt: item.attempts,
+      status,
+      dedupeKey: item.dedupeKey,
+      ...(error === undefined ? {} : { error }),
+    });
   }
 }
