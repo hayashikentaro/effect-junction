@@ -114,10 +114,16 @@ class MockInventory {
 class MockPaymentGateway {
   private payment: MockPayment | undefined;
 
+  constructor(private readonly options: { failAuthorization?: boolean } = {}) {}
+
   authorizePayment(input: {
     amount: number;
     idempotencyKey: string;
   }): MockPayment {
+    if (this.options.failAuthorization) {
+      throw new Error("Mock payment authorization failed");
+    }
+
     this.payment = {
       id: "payment-1",
       idempotencyKey: input.idempotencyKey,
@@ -168,7 +174,8 @@ export async function runPlaceOrderScenario(
 ): Promise<PlaceOrderRuntimeResult> {
   if (
     scenario !== "happy-path" &&
-    scenario !== "inventory-reservation-fails"
+    scenario !== "inventory-reservation-fails" &&
+    scenario !== "payment-authorization-fails"
   ) {
     const expectation = placeOrderScenarioExpectations[scenario];
     return {
@@ -190,7 +197,9 @@ export async function runPlaceOrderScenario(
   const inventory = new MockInventory({
     failReservation: scenario === "inventory-reservation-fails",
   });
-  const paymentGateway = new MockPaymentGateway();
+  const paymentGateway = new MockPaymentGateway({
+    failAuthorization: scenario === "payment-authorization-fails",
+  });
   const outbox = new PlaceOrderOutbox();
   const analytics = new MockAnalytics();
   const diagnostics: string[] = [];
@@ -233,10 +242,41 @@ export async function runPlaceOrderScenario(
   }
   diagnostics.push("reserve-inventory");
 
-  const payment = paymentGateway.authorizePayment({
-    amount: order.total,
-    idempotencyKey: `place-order:${order.id}`,
-  });
+  let payment: MockPayment;
+  try {
+    payment = paymentGateway.authorizePayment({
+      amount: order.total,
+      idempotencyKey: `place-order:${order.id}`,
+    });
+  } catch {
+    diagnostics.push("authorize-payment failed");
+    diagnostics.push("release-inventory required");
+    diagnostics.push("store-payment-reference not attempted");
+    diagnostics.push("receipt not enqueued");
+    diagnostics.push("shipment not enqueued");
+    diagnostics.push("analytics not executed");
+
+    const orderState: PlaceOrderState = "payment_failed";
+
+    return {
+      implemented: true,
+      ok: false,
+      scenario,
+      orderState,
+      orderCategory: categorizePlaceOrderState(orderState),
+      paymentState: "authorization_failed",
+      inventoryState: "release_pending",
+      warnings: [],
+      diagnostics,
+      snapshot: {
+        order: orderStore.snapshot(),
+        inventory: inventory.snapshot(),
+        outbox: outbox.snapshot(),
+        analyticsEvents: [],
+      },
+      report: PlaceOrderJunction.report(),
+    };
+  }
   diagnostics.push("authorize-payment");
 
   const storedOrder = orderStore.storePaymentReference(order.id, payment.id);

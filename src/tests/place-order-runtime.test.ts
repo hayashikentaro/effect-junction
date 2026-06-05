@@ -61,6 +61,43 @@ test("PlaceOrder inventory-reservation-fails stops before payment and outbox", a
   );
 });
 
+test("PlaceOrder payment-authorization-fails records compensation requirement", async () => {
+  const result = await runPlaceOrderScenario("payment-authorization-fails");
+
+  assert.equal(result.implemented, true);
+  assert.equal(result.ok, false);
+  assert.equal(result.orderState, "payment_failed");
+  assert.equal(result.orderCategory, "failed");
+  assert.equal(result.paymentState, "authorization_failed");
+  assert.equal(result.inventoryState, "release_pending");
+  assert.ok(result.snapshot.order);
+  assert.ok(result.snapshot.inventory);
+  assert.equal(result.snapshot.payment, undefined);
+  assert.deepEqual(result.snapshot.outbox.receipt, []);
+  assert.deepEqual(result.snapshot.outbox.shipment, []);
+  assert.equal(result.snapshot.analyticsEvents.length, 0);
+  assert.deepEqual(
+    result.diagnostics.filter((diagnostic) =>
+      [
+        "create-order",
+        "reserve-inventory",
+        "authorize-payment failed",
+        "release-inventory required",
+        "store-payment-reference not attempted",
+        "analytics not executed",
+      ].includes(diagnostic),
+    ),
+    [
+      "create-order",
+      "reserve-inventory",
+      "authorize-payment failed",
+      "release-inventory required",
+      "store-payment-reference not attempted",
+      "analytics not executed",
+    ],
+  );
+});
+
 test("PlaceOrder non-happy-path scenarios are explicitly not implemented", async () => {
   const result = await runPlaceOrderScenario(
     "payment-succeeds-reference-store-fails",

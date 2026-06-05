@@ -6,7 +6,7 @@ It is not a payment framework. It is not a production workflow engine. It is a s
 
 The goal is to reveal partial success, compensation, and reconciliation semantics before writing code.
 
-Implementation status: happy-path and `inventory-reservation-fails` runtime slices exist as educational samples. Other failure scenarios are still planned and should remain guarded until implemented.
+Implementation status: happy-path, `inventory-reservation-fails`, and `payment-authorization-fails` runtime slices exist as educational samples. Other failure scenarios are still planned and should remain guarded until implemented.
 
 ## Effects Involved
 
