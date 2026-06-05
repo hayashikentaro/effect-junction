@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { runPlaceOrderScenario } from "../runtime/place-order-runtime.js";
+import { placeOrderScenarioNames } from "../runtime/place-order-states.js";
 
 test("PlaceOrder happy-path runtime reaches placed state", async () => {
   const result = await runPlaceOrderScenario("happy-path");
@@ -234,15 +235,53 @@ test("PlaceOrder shipment-job-fails keeps order placed with retryable outbox sta
   );
 });
 
-test("PlaceOrder non-happy-path scenarios are explicitly not implemented", async () => {
+test("PlaceOrder analytics-fails keeps order placed with best-effort warning", async () => {
   const result = await runPlaceOrderScenario("analytics-fails");
 
-  assert.equal(result.implemented, false);
-  assert.equal(result.ok, false);
+  assert.equal(result.implemented, true);
+  assert.equal(result.ok, true);
   assert.equal(result.orderState, "placed");
   assert.equal(result.orderCategory, "succeeded");
-  assert.match(
-    result.diagnostics.join("\n"),
-    /PlaceOrder runtime not implemented for analytics-fails/,
+  assert.equal(result.paymentState, "authorized");
+  assert.equal(result.inventoryState, "reserved");
+  assert.ok(result.snapshot.order);
+  assert.equal(result.snapshot.order.paymentReference, "payment-1");
+  assert.ok(result.snapshot.payment);
+  assert.ok(result.snapshot.inventory);
+  assert.deepEqual(result.snapshot.outbox.receipt, ["receipt_pending"]);
+  assert.deepEqual(result.snapshot.outbox.shipment, ["shipment_enqueued"]);
+  assert.equal(result.snapshot.analyticsEvents.length, 0);
+  assert.ok(result.warnings.includes("analytics tracking failed"));
+  assert.deepEqual(
+    result.diagnostics.filter((diagnostic) =>
+      [
+        "create-order",
+        "reserve-inventory",
+        "authorize-payment",
+        "store-payment-reference",
+        "enqueue-receipt-mail",
+        "enqueue-shipment-job",
+        "track-order-created failed",
+        "analytics failure did not block critical path",
+      ].includes(diagnostic),
+    ),
+    [
+      "create-order",
+      "reserve-inventory",
+      "authorize-payment",
+      "store-payment-reference",
+      "enqueue-receipt-mail",
+      "enqueue-shipment-job",
+      "track-order-created failed",
+      "analytics failure did not block critical path",
+    ],
   );
+});
+
+test("all PlaceOrder scenarios are implemented", async () => {
+  for (const scenarioName of placeOrderScenarioNames) {
+    const result = await runPlaceOrderScenario(scenarioName);
+
+    assert.equal(result.implemented, true);
+  }
 });

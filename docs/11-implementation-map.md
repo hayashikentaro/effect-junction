@@ -2,7 +2,7 @@
 
 This document maps the current TypeScript implementation and its dependencies.
 
-This is not a production workflow engine. The implementation is a small working sample of Effect Junction semantics. Runtime exists only for `RegisterUserJunction`. `PlaceOrderJunction` has a static model/report sample, but no runtime. Core types should remain independent from the mock runtime.
+This is not a production workflow engine. The implementation is a small working sample of Effect Junction semantics. Runtime exists for `RegisterUserJunction` and for the planned `PlaceOrderJunction` educational scenario list. Core types should remain independent from the mock runtimes.
 
 ## Layer Map
 
@@ -32,12 +32,15 @@ flowchart TB
     MockServices[mock-services.ts]
     Outbox[in-memory-outbox.ts]
     RegisterUserRuntime[register-user-runtime.ts]
+    PlaceOrderStates[place-order-states.ts]
+    PlaceOrderRuntime[place-order-runtime.ts]
   end
 
   subgraph Tests["src/tests"]
     RegisterUserModelTests[register-user.test.ts]
     PlaceOrderModelTests[place-order.test.ts]
     RuntimeTests[register-user-runtime.test.ts]
+    PlaceOrderRuntimeTests[place-order-runtime.test.ts]
   end
 
   Vocabulary --> Core
@@ -93,7 +96,7 @@ Core non-responsibilities:
 
 ## Sample And Runtime Map
 
-`RegisterUserJunction` has both a static model and a deterministic mock runtime. `PlaceOrderJunction` currently has a static model/report sample and a happy-path runtime only.
+`RegisterUserJunction` has both a static model and a deterministic mock runtime. `PlaceOrderJunction` has a static model/report sample and a deterministic mock runtime covering its planned scenario names.
 
 ```mermaid
 flowchart TB
@@ -112,7 +115,7 @@ flowchart TB
     RegisterRuntimeNode[RegisterUserRuntime]
   end
 
-  subgraph PlaceRuntime["PlaceOrder happy-path runtime only"]
+  subgraph PlaceRuntime["PlaceOrder planned scenario runtime"]
     PlaceOrderRuntime[place-order-runtime.ts]
   end
 
@@ -144,11 +147,11 @@ The runtime exists to demonstrate RegisterUser semantics:
 
 It does not generalize into a reusable queue, workflow, or effect runtime.
 
-The PlaceOrder runtime currently demonstrates only `happy-path`. Failure scenarios remain planned.
+The PlaceOrder runtime demonstrates the planned scenario list with deterministic mock order, inventory, payment, outbox, and analytics state. Provider-specific policies still stay outside `src/core`.
 
 ## Demo CLI Flow
 
-`npm run demo` defaults to the RegisterUser happy path. `--junction place-order` prints the PlaceOrder static report plus scenario expectation state. It still does not run a PlaceOrder runtime scenario.
+`npm run demo` defaults to the RegisterUser happy path. `--junction place-order` prints the PlaceOrder static report, scenario expectation state, and runtime result for the selected planned scenario.
 
 ```mermaid
 flowchart TD
@@ -156,7 +159,8 @@ flowchart TD
   Args -->|no --junction<br/>or register-user| Scenario[parse --scenario<br/>default happy-path]
   Args -->|--junction place-order| PlaceReport[print PlaceOrderJunction report]
   PlaceReport --> Expectation[print scenario expectation]
-  Expectation --> PlaceStop[Runtime: not implemented]
+  Expectation --> PlaceRuntimeResult[run PlaceOrder runtime scenario]
+  PlaceRuntimeResult --> PlaceOutput[print result, outbox, warnings, diagnostics]
 
   Scenario --> RunRegister[runRegisterUserScenario]
   RunRegister --> RegisterRuntime[RegisterUserRuntime]
@@ -180,6 +184,7 @@ Supported PlaceOrder command:
 
 ```sh
 npm run demo -- --junction place-order
+npm run demo -- --junction place-order --scenario analytics-fails
 npm run demo -- --junction place-order --scenario payment-succeeds-reference-store-fails
 ```
 

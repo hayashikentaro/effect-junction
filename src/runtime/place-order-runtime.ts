@@ -1,7 +1,6 @@
 import { PlaceOrderJunction } from "../samples/place-order.js";
 import {
   categorizePlaceOrderState,
-  placeOrderScenarioExpectations,
   type InventoryState,
   type PaymentState,
   type PlaceOrderOutboxState,
@@ -179,7 +178,15 @@ class PlaceOrderOutbox {
 class MockAnalytics {
   readonly events: unknown[] = [];
 
+  constructor(
+    private readonly options: { failTrackOrderCreated?: boolean } = {},
+  ) {}
+
   trackOrderCreated(orderId: string): void {
+    if (this.options.failTrackOrderCreated) {
+      throw new Error("Mock analytics tracking failed");
+    }
+
     this.events.push({
       name: "order_created",
       orderId,
@@ -190,30 +197,6 @@ class MockAnalytics {
 export async function runPlaceOrderScenario(
   scenario: PlaceOrderScenarioName,
 ): Promise<PlaceOrderRuntimeResult> {
-  if (
-    scenario !== "happy-path" &&
-    scenario !== "inventory-reservation-fails" &&
-    scenario !== "payment-authorization-fails" &&
-    scenario !== "payment-succeeds-reference-store-fails" &&
-    scenario !== "receipt-mail-fails" &&
-    scenario !== "shipment-job-fails"
-  ) {
-    const expectation = placeOrderScenarioExpectations[scenario];
-    return {
-      implemented: false,
-      ok: false,
-      scenario,
-      orderState: expectation.finalOrderState,
-      orderCategory: categorizePlaceOrderState(expectation.finalOrderState),
-      paymentState: expectation.expectedPaymentState ?? "not_requested",
-      inventoryState: expectation.expectedInventoryState ?? "not_reserved",
-      warnings: [],
-      diagnostics: [`PlaceOrder runtime not implemented for ${scenario}`],
-      snapshot: emptySnapshot(),
-      report: PlaceOrderJunction.report(),
-    };
-  }
-
   const orderStore = new MockOrderStore({
     failStorePaymentReference:
       scenario === "payment-succeeds-reference-store-fails",
@@ -228,7 +211,9 @@ export async function runPlaceOrderScenario(
     failReceipt: scenario === "receipt-mail-fails",
     failShipment: scenario === "shipment-job-fails",
   });
-  const analytics = new MockAnalytics();
+  const analytics = new MockAnalytics({
+    failTrackOrderCreated: scenario === "analytics-fails",
+  });
   const diagnostics: string[] = [];
 
   const order = orderStore.createOrder({
@@ -362,8 +347,14 @@ export async function runPlaceOrderScenario(
     diagnostics.push("enqueue-shipment-job");
   }
 
-  analytics.trackOrderCreated(order.id);
-  diagnostics.push("track-order-created");
+  try {
+    analytics.trackOrderCreated(order.id);
+    diagnostics.push("track-order-created");
+  } catch {
+    warnings.push("analytics tracking failed");
+    diagnostics.push("track-order-created failed");
+    diagnostics.push("analytics failure did not block critical path");
+  }
 
   const orderState: PlaceOrderState = "placed";
 
@@ -385,15 +376,5 @@ export async function runPlaceOrderScenario(
       analyticsEvents: [...analytics.events],
     },
     report: PlaceOrderJunction.report(),
-  };
-}
-
-function emptySnapshot(): PlaceOrderRuntimeSnapshot {
-  return {
-    outbox: {
-      receipt: [],
-      shipment: [],
-    },
-    analyticsEvents: [],
   };
 }

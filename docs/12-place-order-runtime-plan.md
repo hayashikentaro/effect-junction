@@ -6,7 +6,7 @@ It is not a payment framework. It is not a production workflow engine. It is a s
 
 The goal is to reveal partial success, compensation, and reconciliation semantics before writing code.
 
-Implementation status: happy-path, `inventory-reservation-fails`, `payment-authorization-fails`, `payment-succeeds-reference-store-fails`, `receipt-mail-fails`, and `shipment-job-fails` runtime slices exist as educational samples. The analytics failure scenario is still planned and should remain guarded until implemented.
+Implementation status: all planned PlaceOrder runtime scenarios are implemented as educational deterministic mock slices. This is still not a payment framework or production workflow engine.
 
 ## Effects Involved
 
