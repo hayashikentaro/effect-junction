@@ -125,6 +125,7 @@ After `npm run web:serve`, open `http://localhost:4173/web/`.
 - [Place Order Implementation Checklist](docs/13-place-order-implementation-checklist.md)
 - [Validation And Handoff](docs/14-validation-and-handoff.md)
 - [Clean Architecture Coexistence](docs/15-clean-architecture-coexistence.md)
+- [Repository Guide](docs/16-repository-guide.md)
 
 ## Status
 
