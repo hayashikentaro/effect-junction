@@ -109,23 +109,34 @@ After `npm run web:serve`, open `http://localhost:4173/web/`.
 
 ## Documentation
 
+### Start here
+
+- [Repository Guide](docs/16-repository-guide.md)
 - [Overview](docs/00-overview.md)
 - [Problem](docs/01-problem.md)
+
+### Core concepts
+
 - [Effect Attributes](docs/02-effect-attributes.md)
 - [Effect Junction](docs/03-effect-junction.md)
 - [Prescriptions](docs/04-prescriptions.md)
-- [Register User Sample](docs/05-register-user-sample.md)
 - [Clean Architecture Boundary](docs/06-clean-architecture-boundary.md)
 - [Monad And World Effect](docs/07-monad-and-world-effect.md)
-- [Roadmap](docs/08-roadmap.md)
+
+### Samples and runtime
+
+- [Register User Sample](docs/05-register-user-sample.md)
 - [Mock Runtime](docs/09-mock-runtime.md)
 - [Place Order Sample](docs/10-place-order-sample.md)
-- [Implementation Map](docs/11-implementation-map.md)
 - [Place Order Runtime Plan](docs/12-place-order-runtime-plan.md)
 - [Place Order Implementation Checklist](docs/13-place-order-implementation-checklist.md)
+
+### Implementation and handoff
+
+- [Implementation Map](docs/11-implementation-map.md)
 - [Validation And Handoff](docs/14-validation-and-handoff.md)
 - [Clean Architecture Coexistence](docs/15-clean-architecture-coexistence.md)
-- [Repository Guide](docs/16-repository-guide.md)
+- [Roadmap](docs/08-roadmap.md)
 
 ## Status
 
